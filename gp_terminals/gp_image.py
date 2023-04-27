@@ -1,6 +1,6 @@
 import numpy as np
 from gp_utils.gp_size import GPSize
-from gp_filter import GPFilter
+from gp_terminals.gp_filter import GPFilter
 
 class GPImage:
     """

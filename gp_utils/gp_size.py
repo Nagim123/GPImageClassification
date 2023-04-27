@@ -18,5 +18,5 @@ class GPSize:
         self.w = w
         self.h = h
     
-    def shape(self) -> np._ShapeType:
+    def shape(self):
         return np.shape([self.h, self.w])

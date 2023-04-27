@@ -1,6 +1,6 @@
 import numpy as np
 
-from gp_image import GPImage
+from gp_terminals.gp_image import GPImage
 from gp_utils.gp_size import GPSize
 from gp_utils.gp_point import GPPoint
 

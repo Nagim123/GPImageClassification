@@ -7,11 +7,11 @@ import numpy as np
 # ========================
 # Upload typings.
 # ========================
-from gp_utils.gp_image import GPImage
-from gp_utils.gp_filter import GPFilter
+from gp_terminals.gp_image import GPImage
+from gp_terminals.gp_filter import GPFilter
 from gp_utils.gp_size import GPSize
 from gp_utils.gp_point import GPPoint
-from gp_utils.gp_cutshape import GPCutshape
+from gp_terminals.gp_cutshape import GPCutshape
 
 # ========================
 # Classification operators.

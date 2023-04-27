@@ -1,8 +1,8 @@
 import numpy as np
 
 from gp_image import GPImage
-from gp_size import GPSize
-from gp_point import GPPoint
+from gp_utils.gp_size import GPSize
+from gp_utils.gp_point import GPPoint
 
 class GPCutshape:
     def __init__(self, type_name: str) -> None:

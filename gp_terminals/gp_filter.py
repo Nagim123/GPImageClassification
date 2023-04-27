@@ -1,5 +1,5 @@
 import numpy as np
-from gp_size import GPSize
+from gp_utils.gp_size import GPSize
 
 class GPFilter:
     """

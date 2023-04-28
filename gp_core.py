@@ -1,5 +1,8 @@
 import numpy as np
 import gp_operators as ops
+from gp_dataset import GPDataset
+from gp_tree import GPTree
+import random
 
 from deap import gp
 from gp_terminals.gp_point import GPPoint
@@ -14,6 +17,9 @@ class GPImageClassifier:
     """
     
     def __init__(self,
+                train_dataset: GPDataset,
+                test_dataset: GPDataset,
+                classes: list,
                 population_size: int = 50,
                 generations: int = 50,
                 min_tree_depth: int = 2,
@@ -48,7 +54,7 @@ class GPImageClassifier:
         self.generations = generations
         self.min_tree_depth = min_tree_depth
         self.max_tree_depth = max_tree_depth
-        self.tournamnt_size = tournament_size
+        self.tournament_size = tournament_size
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
         self.elitism = elitism
@@ -83,12 +89,33 @@ class GPImageClassifier:
         pset.addEphemeralConstant("Size", lambda: GPSize(
             iw*np.random.uniform(low=0.15, high=0.75), ih*np.random.uniform(low=0.15, high=0.75)
         ))
-        
-    def fitness():
-        pass
 
-    def selection():
-        pass
+        self.population = [GPTree() for _ in range(population_size)]
+        self.train_dataset = train_dataset
+        self.test_dataset = test_dataset
+        self.classes = classes
 
-    def evolve():
-        pass
+    def fitness(self, individual: GPTree):
+        correct = 0
+        for i in range(len(self.train_dataset)):
+            pred = individual.feed(self.train_dataset[i][0])
+            if pred > 0.5:
+                pred = self.classes[1]
+            else:
+                pred = self.classes[0]
+            correct += pred == self.train_dataset[i][1]
+        return correct / len(self.train_dataset)
+
+    def selection(self):
+        self.population.sort(key=lambda x: self.fitness(x))
+        self.population = self.population[:self.population_size]
+
+    def evolve(self):
+        for _ in range(self.crossover_rate * self.population_size // 2):
+            r1, r2 = random.randint(self.population_size), random.randint(self.population_size)
+            children = deap.gp.cxOnePoint(self.population[r1].tree, self.population[r2].tree)
+            self.population += [GPTree(children[0]), GPTree(children[1])]
+        for i in range(self.population_size):
+            if random.uniform(0, 1) > self.mutation_rate:
+                self.population += GPTree(deap.gp.mutNodeReplacement())
+        self.selection()

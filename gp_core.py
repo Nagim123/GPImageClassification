@@ -1,4 +1,4 @@
-from deap import gp
+
 
 class GPImageClassifier:
     """
@@ -6,17 +6,34 @@ class GPImageClassifier:
     """
     
     def __init__(self,
-                population_size = 50,
-                generations = 50,
-                min_tree_depth = 2,
-                max_tree_depth = 10,
-                tournament_size = 7,
-                mutation_rate = 0.2,
-                crossover_rate = 0.8,
-                elitism = 10
+                population_size: int = 50,
+                generations: int = 50,
+                min_tree_depth: int = 2,
+                max_tree_depth: int = 10,
+                tournament_size: int = 7,
+                mutation_rate: float = 0.2,
+                crossover_rate: float = 0.8,
+                elitism: int = 10
                 ) -> None:
         """
         Initialize Genetic Programming algorithm.
+
+        Parameter
+        ---------
+        population_size: int
+            The number of individuals saved in memory.
+        
+        generations: int
+            How much generations will be produced before termination.
+        
+        min_tree_size: int
+            Minimum depth of generated trees.
+
+        max_tree_size: int
+            Maximum depth of generated trees.
+
+        tournament_size: int
+            ???.    
         """
         
         self.population_size = population_size
@@ -27,8 +44,6 @@ class GPImageClassifier:
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
         self.elitism = elitism
-
-        self.pset = gp.PrimitiveSetTyped([GPImage, ])
     
     def fitness():
         pass

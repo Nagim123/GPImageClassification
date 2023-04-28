@@ -28,3 +28,6 @@ class GPTree:
         pset.addEphemeralConstant("Filter", lambda: GPFilter(np.random.rand()))
 
         self.pset = pset
+    
+    def feed(image: GPImage) -> float:
+        return 1.0

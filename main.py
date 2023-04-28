@@ -3,8 +3,8 @@ import gp_operators as ops
 from gp_terminals.gp_image import GPImage
 from gp_terminals.gp_cutshape import GPCutshape
 from gp_terminals.gp_filter import GPFilter
-from gp_utils.gp_point import GPPoint
-from gp_utils.gp_size import GPSize
+from gp_terminals.gp_point import GPPoint
+from gp_terminals.gp_size import GPSize
 
 pset = gp.PrimitiveSetTyped("test", [float, float, GPImage, GPFilter, GPPoint, GPCutshape, GPSize], float)
 pset.addPrimitive(ops.add, [float, float], float)

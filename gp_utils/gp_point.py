@@ -13,8 +13,8 @@ class GPPoint:
         y: int
             Y coordinate.
         """ 
-        self.x = x
-        self.y = y
+        self.x = int(x)
+        self.y = int(y)
 
     def __str__(self) -> str:
         return f"GPPoint({self.x},{self.y})"

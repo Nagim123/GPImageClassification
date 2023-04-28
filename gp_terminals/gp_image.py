@@ -1,5 +1,5 @@
 import numpy as np
-from gp_terminals.gp_size import GPSize
+from gp_utils.gp_size import GPSize
 from gp_terminals.gp_filter import GPFilter
 
 class GPImage:
@@ -36,6 +36,8 @@ class GPImage:
         return GPImage(result)
     
     def apply_maxpool2x2(self) -> object:
+        if self.size.h == 1 and self.size.w == 1:
+            return GPImage(self.pixel_data.copy())
         result = np.zeros((self.size.h//2, self.size.w//2))
         for i in range(self.size.h - 1, 2):
             for j in range(self.size.w - 1, 2):

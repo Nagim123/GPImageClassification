@@ -1,8 +1,8 @@
 import numpy as np
 
 from gp_terminals.gp_image import GPImage
-from gp_terminals.gp_size import GPSize
-from gp_terminals.gp_point import GPPoint
+from gp_utils.gp_size import GPSize
+from gp_utils.gp_point import GPPoint
 
 class GPCutshape:
     """
@@ -38,15 +38,16 @@ class GPCutshape:
         if self.type_name == 'elp':
             pixel_data = image.pixel_data
             mx, my = np.meshgrid(np.arange(pixel_data.shape[1]), np.arange(pixel_data.shape[0]))
+            if w == 0 or h == 0:
+                return pixel_data.copy()
             ellipse_mask = ((mx - x) / w)**2 + ((my - y) / h)**2 <= 1
-            return pixel_data[ellipse_mask]
+            return pixel_data[ellipse_mask].copy()
         elif self.type_name == 'row':
-            return image.pixel_data[y, x:max(x+w, image.size.w)]
+            return image.pixel_data[y, x:max(x+w, image.size.w)].copy()
         elif self.type_name == 'col':
-            return image.pixel_data[y:max(y+h, image.size.h), x]
+            return image.pixel_data[y:max(y+h, image.size.h), x].copy()
         elif self.type_name == 'rec':
-            print(w, " ", h, " ", x, " ", y)
-            return image.pixel_data[y:max(y+h, image.size.h), x:max(x+w, image.size.w)]
+            return image.pixel_data[y:max(y+h, image.size.h), x:max(x+w, image.size.w)].copy()
     def __str__(self) -> str:
         return f"GPCutshape('{self.type_name}')"
     

@@ -4,11 +4,12 @@ from gp_dataset import GPDataset
 train_dataset = GPDataset("toydataset/train", (20, 20))
 test_dataset = GPDataset("toydataset/test", (20, 20))
 print("DATASETS LOADED")
-gp = GPImageClassifier(train_dataset, test_dataset, ["circle", "square"], population_size=1, generations=1)
+gp = GPImageClassifier(train_dataset, test_dataset, ["circle", "square"], population_size=30, generations=30, mutation_rate=0.5)
 print("INITIALIZED GP CLASSIFIER")
 gp.fit(train_dataset)
 print("FIT PROCESS FINISHED")
 result = gp.get_best()
+print(result.tree)
 
 correct = 0
 for i in range(len(test_dataset)):

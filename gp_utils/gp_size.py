@@ -15,8 +15,8 @@ class GPSize:
         h: int
             Height of size.
         """ 
-        self.w = w
-        self.h = h
+        self.w = int(w)
+        self.h = int(h)
     
     def shape(self):
         return np.shape([self.h, self.w])

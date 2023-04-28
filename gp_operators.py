@@ -9,9 +9,12 @@ import numpy as np
 # ========================
 from gp_terminals.gp_image import GPImage
 from gp_terminals.gp_filter import GPFilter
-from gp_terminals.gp_size import GPSize
-from gp_terminals.gp_point import GPPoint
+from gp_terminals.gp_percentage import GPPercentage 
 from gp_terminals.gp_cutshape import GPCutshape
+from gp_terminals.gp_percentage_size import GPPercentageSize
+
+from gp_utils.gp_point import GPPoint
+from gp_utils.gp_size import GPSize
 
 # ========================
 # Classification operators.
@@ -20,7 +23,7 @@ from gp_terminals.gp_cutshape import GPCutshape
 def add(a: float, b: float) -> float:
     return a + b
 
-def sub(a: float, b: float):
+def sub(a: float, b: float) -> float:
     return a - b
 
 def mul(a: float, b: float) -> float:
@@ -37,18 +40,24 @@ def div(a: float, b: float) -> float:
 # Aggregation operators.
 # ========================
 
-def agg_mean(image: GPImage, top_left_corner: GPPoint, size: GPSize, shape: GPCutshape) -> float:
+def agg_mean(image: GPImage, top_left_corner: GPPercentage, size: GPPercentageSize, shape: GPCutshape) -> float:
+    top_left_corner = GPPoint(top_left_corner.a * image.size.w, top_left_corner.b * image.size.h)
+    size = GPSize(size.a * image.size.w, size.b * image.size.h)
     return np.mean(shape.cut(image, top_left_corner, size))
 
-def agg_stdev(image: GPImage, top_left_corner: GPPoint, size: GPSize, shape: GPCutshape) -> float:
-    print("stdev!")
-    print(shape.type_name)
+def agg_stdev(image: GPImage, top_left_corner: GPPercentage, size: GPPercentageSize, shape: GPCutshape) -> float:
+    top_left_corner = GPPoint(top_left_corner.a * image.size.w, top_left_corner.b * image.size.h)
+    size = GPSize(size.a * image.size.w, size.b * image.size.h)
     return np.std(shape.cut(image, top_left_corner, size))
 
-def agg_min(image: GPImage, top_left_corner: GPPoint, size: GPSize, shape: GPCutshape) -> float:
+def agg_min(image: GPImage, top_left_corner: GPPercentage, size: GPPercentageSize, shape: GPCutshape) -> float:
+    top_left_corner = GPPoint(top_left_corner.a * image.size.w, top_left_corner.b * image.size.h)
+    size = GPSize(size.a * image.size.w, size.b * image.size.h)
     return np.min(shape.cut(image, top_left_corner, size))
 
-def agg_max(image: GPImage, top_left_corner: GPPoint, size: GPSize, shape: GPCutshape) -> float:
+def agg_max(image: GPImage, top_left_corner: GPPercentage, size: GPPercentageSize, shape: GPCutshape) -> float:
+    top_left_corner = GPPoint(top_left_corner.a * image.size.w, top_left_corner.b * image.size.h)
+    size = GPSize(size.a * image.size.w, size.b * image.size.h)
     return np.max(shape.cut(image, top_left_corner, size))
 
 # ========================

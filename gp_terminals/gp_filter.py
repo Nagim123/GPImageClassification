@@ -40,7 +40,7 @@ class GPFilter:
         return np.sum(np.multiply(self.filter_data, matrix))
     
     def __str__(self) -> str:
-        np_str = str(self.filter_data.tolist())#.replace('  ', ' ').replace('\n ',',').replace(' ', ',')
+        np_str = str(self.filter_data.tolist())
         return f"GPFilter(np.array({np_str}))"
     
     __repr__ = __str__

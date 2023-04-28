@@ -36,6 +36,10 @@ class GPImage:
         return GPImage(result)
     
     def apply_maxpool2x2(self) -> object:
+        """
+        Apply max pool 2d with size 2x2 and stride equal to 2.
+        """
+        
         if self.size.h == 1 and self.size.w == 1:
             return GPImage(self.pixel_data.copy())
         result = np.zeros((self.size.h//2, self.size.w//2))
@@ -46,7 +50,7 @@ class GPImage:
         return GPImage(result)
     
     def __str__(self) -> str:
-        np_str = str(self.pixel_data.tolist())#.replace('  ', ' ').replace('\n ',',').replace(' ', ',')
+        np_str = str(self.pixel_data.tolist())
         return f"GPImage(np.array({np_str}))"
     
     __repr__ = __str__

@@ -23,9 +23,6 @@ class GPImageClassifier:
     """
 
     def __init__(self,
-                 train_dataset: GPDataset,
-                 test_dataset: GPDataset,
-                 classes: list,
                  population_size: int = 50,
                  generations: int = 50,
                  min_tree_depth: int = 2,
@@ -103,39 +100,35 @@ class GPImageClassifier:
         ), GPPercentageSize)
         self.pset = pset
         self.population: List[GPTree] = []
-        #self.population = [GPTree(pset, min_tree_depth, max_tree_depth) for _ in range(population_size)]
-        for _ in range(population_size):
-            print(f"Created {_}/{population_size}")
-            gptree = None
-            while gptree == None:
-                try:
-                    gptree = GPTree(pset, min_tree_depth, max_tree_depth)
-                except:
-                    pass
-            
-            self.population.append(gptree)
 
-        self.train_dataset = train_dataset
-        self.test_dataset = test_dataset
-        self.classes = classes
-        print("DONE CREATION")
+    def _fitness(self, individual: GPTree) -> None:
+        """
+        Calculation of fitness based on accuracy.
+        """
 
-    def fitness(self, individual: GPTree):
         correct = 0
         for i in range(len(self.train_dataset)):
-            pred = individual.feed(self.train_dataset[i][0])
+            pred = individual.predict(self.train_dataset[i][0])
             if pred > 0.5:
-                pred = self.classes[1]
+                pred = self.train_dataset.classes[1]
             else:
-                pred = self.classes[0]
+                pred = self.train_dataset.classes[0]
             correct += pred == self.train_dataset[i][1]
         return correct / len(self.train_dataset)
 
-    def selection(self):
-        self.population.sort(key=lambda x: -self.fitness(x))
+    def _selection(self) -> None:
+        """
+        Selection of best individuals and removing the worst ones.
+        """
+
+        self.population.sort(key=lambda x: -self._fitness(x))
         self.population = self.population[:self.population_size]
 
-    def evolve(self):
+    def _evolve(self) -> None:
+        """
+        Create new generation by crossover/mutation and add it to population.
+        """
+        
         for _ in range(round(self.crossover_rate * self.population_size)):
             r1, r2 = random.randint(0, self.population_size - 1), random.randint(0, self.population_size - 1)
             children = gp.cxOnePoint(copy.deepcopy(self.population[r1].tree), copy.deepcopy(self.population[r2].tree))
@@ -144,20 +137,47 @@ class GPImageClassifier:
             if random.uniform(0, 1) > self.mutation_rate:
                 self.population += [GPTree(self.pset, tree=gp.mutEphemeral(copy.deepcopy(self.population[i].tree), "one")[0])]
                 # TODO: different mutations
-        self.selection()
+        self._selection()
     
-    def fit(self, dataset):
+    def fit(self, dataset) -> None:
+        """
+        Fit training dataset to classifier.
+        """
+
+        for _ in range(self.population_size):
+            gptree = None
+            while gptree == None:
+                try:
+                    gptree = GPTree(self.pset, self.min_tree_depth, self.max_tree_depth)
+                except:
+                    pass         
+            self.population.append(gptree)
+
+        self.train_dataset = dataset
+
         bar = tqdm(range(self.generations))
         for gen in bar:
-            self.evolve()
-            bar.set_postfix({"best:":self.fitness(self.get_best())})
-            print(str(self.get_best().tree))
+            self._evolve()
+            bar.set_postfix({"best:":self._fitness(self.get_best())})
 
     def get_best(self) -> GPTree:
+        """
+        Return best individual.
+        """
+        
         return self.population[0]
 
+    def predict(self, dataset) -> List[float]:
+        """
+        Predict data on specific dataset.
+        """
+        
+        if(len(self.population) == 0):
+            raise Exception("Call fit() before predict()!")
+        
+        the_best = self.get_best()
+        result = []
 
-# train_dataset = GPDataset("toydataset/train", (20, 20))
-# dfn = "lambda ARG0: agg_min(conv(pool(ARG0), GPFilter(np.array([[-1.9312678938815866, -2.301198424586718, 2.4333607536213955], [-1.5678849281981493, 2.3056104677348155, 2.10001006247031], [-0.5096000332508739, 0.45372257013040196, 0.8309849412175507]]))), GPPercentage(0.6539595839796143,0.24898311846783155), GPPercentageSize(0.3061538354389799,0.5865971625482215), GPCutshape('elp'))"
-# dfn = eval(dfn)
-# print(dfn(train_dataset[0][0]))
+        for i in range(len(dataset)):
+            result.append(the_best.predict(dataset[i][0]))
+        return result

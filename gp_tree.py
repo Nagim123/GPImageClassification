@@ -13,7 +13,7 @@ class GPTree:
         else:
             self.tree = tree
         
-    def feed(self, image: GPImage) -> float:
+    def predict(self, image: GPImage) -> float:
         x = run_tree(image, self.tree)
         return self.sigmoid_activation(x)
     

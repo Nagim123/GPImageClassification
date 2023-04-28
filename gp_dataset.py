@@ -2,21 +2,28 @@ from gp_terminals.gp_image import GPImage
 import cv2
 import os
 
-
 class GPDataset:
-    def __init__(self, path: str, size_transform: tuple[int, int]):
+    """
+    Custom dataset container.
+    """
+    
+    def __init__(self, path: str, size_transform: tuple[int, int]) -> None:
         self.images = []
         self.size = size_transform
+        
+        classes = set()
         for label in os.listdir(path):
             for image_name in os.listdir(path + '/' + label):
                 img = cv2.imread(os.path.join(path + '/' + label, image_name), cv2.IMREAD_GRAYSCALE)
                 if img is not None:
                     img = GPImage(img)
                     self.images.append((img, label))
+                    classes.add(label)
+        self.classes = list(classes)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> GPImage:
         return self.images[item]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.images)
 

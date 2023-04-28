@@ -1,4 +1,8 @@
 class GPPercentage:
+    """
+    Represent relative position in percents.
+    """
+    
     def __init__(self, a: float, b: float) -> None:
         self.a = a
         self.b = b

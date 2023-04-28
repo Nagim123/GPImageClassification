@@ -3,7 +3,6 @@ import gp_operators as ops
 from gp_dataset import GPDataset
 from gp_tree import GPTree
 import random
-
 from deap import gp
 from gp_terminals.gp_point import GPPoint
 from gp_terminals.gp_size import GPSize
@@ -11,24 +10,25 @@ from gp_terminals.gp_cutshape import GPCutshape
 from gp_terminals.gp_filter import GPFilter
 from gp_terminals.gp_image import GPImage
 
+
 class GPImageClassifier:
     """
     Main class that implements Genetic Programming.
     """
-    
+
     def __init__(self,
-                train_dataset: GPDataset,
-                test_dataset: GPDataset,
-                classes: list,
-                population_size: int = 50,
-                generations: int = 50,
-                min_tree_depth: int = 2,
-                max_tree_depth: int = 10,
-                tournament_size: int = 7,
-                mutation_rate: float = 0.2,
-                crossover_rate: float = 0.8,
-                elitism: int = 10
-                ) -> None:
+                 train_dataset: GPDataset,
+                 test_dataset: GPDataset,
+                 classes: list,
+                 population_size: int = 50,
+                 generations: int = 50,
+                 min_tree_depth: int = 2,
+                 max_tree_depth: int = 10,
+                 tournament_size: int = 7,
+                 mutation_rate: float = 0.2,
+                 crossover_rate: float = 0.8,
+                 elitism: int = 10
+                 ) -> None:
         """
         Initialize Genetic Programming algorithm.
 
@@ -49,7 +49,7 @@ class GPImageClassifier:
         tournament_size: int
             ???.    
         """
-        
+
         self.population_size = population_size
         self.generations = generations
         self.min_tree_depth = min_tree_depth
@@ -61,7 +61,7 @@ class GPImageClassifier:
 
         # Tree definition.
         pset = gp.PrimitiveSetTyped([GPImage], float)
-        #Function set
+        # Function set
         pset.addPrimitive(ops.add, [float, float], float)
         pset.addPrimitive(ops.sub, [float, float], float)
         pset.addPrimitive(ops.mul, [float, float], float)
@@ -73,9 +73,9 @@ class GPImageClassifier:
         pset.addPrimitive(ops.conv, [GPImage, GPFilter], GPImage)
         pset.addPrimitive(ops.pool, [GPImage], GPImage)
 
-        #Additional info
+        # Additional info
         shape_names = ["rect", "col", "row", "eps"]
-        iw, ih = image_size.w, image_size.h #SIZES
+        iw, ih = train_dataset.size[0], train_dataset.size[1]
 
         #Terminal set
         #Generate random kernel filter with values in [-3, 3]
@@ -86,13 +86,15 @@ class GPImageClassifier:
             iw*np.random.uniform(low=0.05, high=0.9), ih*np.random.uniform(low=0.05, high=0.9),
             GPCutshape
         ))
-        
+
         pset.addEphemeralConstant("Size", lambda: GPSize(
             iw*np.random.uniform(low=0.15, high=0.75), ih*np.random.uniform(low=0.15, high=0.75),
             GPSize
         ))
 
-        self.population = [GPTree() for _ in range(population_size)]
+        self.pset = pset
+
+        self.population = [GPTree(min_tree_depth, max_tree_depth, pset) for _ in range(population_size)]
         self.train_dataset = train_dataset
         self.test_dataset = test_dataset
         self.classes = classes
@@ -113,11 +115,12 @@ class GPImageClassifier:
         self.population = self.population[:self.population_size]
 
     def evolve(self):
-        for _ in range(self.crossover_rate * self.population_size // 2):
-            r1, r2 = random.randint(self.population_size), random.randint(self.population_size)
+        for _ in range(round(self.crossover_rate * self.population_size)):
+            r1, r2 = random.randint(0, self.population_size - 1), random.randint(0, self.population_size - 1)
             children = gp.cxOnePoint(self.population[r1].tree, self.population[r2].tree)
-            self.population += [GPTree(children[0]), GPTree(children[1])]
+            self.population += [GPTree(children[0], self.pset), GPTree(children[1], self.pset)]
         for i in range(self.population_size):
             if random.uniform(0, 1) > self.mutation_rate:
-                self.population += GPTree(gp.mutNodeReplacement())
+                self.population += GPTree(gp.mutNodeReplacement(self.population[i].tree, self.pset), self.pset)
+                # TODO: different mutations
         self.selection()

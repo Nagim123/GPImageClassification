@@ -21,9 +21,9 @@ class GPCutshape:
             ellipse_mask = ((mx - x) / w)**2 + ((my - y) / h)**2 <= 1
             return pixel_data[ellipse_mask]
         elif self.type_name == 'row':
-            return image.pixel_data[y, x:x+w]
+            return image.pixel_data[y, x:max(x+w, image.size.w)]
         elif self.type_name == 'col':
-            return image.pixel_data[y:y+h, x]
+            return image.pixel_data[y:max(y+h, image.size.h), x]
         elif self.type_name == 'rec':
-            return image.pixel_data[y:y+h, x:x+w]
+            return image.pixel_data[y:max(y+h, image.size.h), x:max(x+w, image.size.w)]
 

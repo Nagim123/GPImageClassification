@@ -20,3 +20,8 @@ class GPSize:
     
     def shape(self):
         return np.shape([self.h, self.w])
+    
+    def __str__(self) -> str:
+        return f"GPSize({self.w},{self.h})"
+    
+    __repr__ = __str__

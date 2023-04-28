@@ -44,3 +44,7 @@ class GPCutshape:
         elif self.type_name == 'rec':
             return image.pixel_data[y:max(y+h, image.size.h), x:max(x+w, image.size.w)]
 
+    def __str__(self) -> str:
+        return f"GPCutshape('{self.type_name}')"
+    
+    __repr__ = __str__

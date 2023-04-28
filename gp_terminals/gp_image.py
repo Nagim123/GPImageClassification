@@ -40,8 +40,14 @@ class GPImage:
             raise Exception(f"To apply max pool image's size must be divisible by two. Shape:{self.size.shape()}")
         
         result = np.zeros((self.size.h//2, self.size.w//2))
-        for i in range(self.size.h - 1):
-            for j in range(self.size.w - 1):
-                result[i][j] = np.max(self.pixel_data[i:i+1, j:j+1])
+        for i in range(self.size.h - 1, 2):
+            for j in range(self.size.w - 1, 2):
+                result[i//2][j//2] = np.max(self.pixel_data[i:i+1, j:j+1])
         
         return GPImage(result)
+    
+    def __str__(self) -> str:
+        np_str = str(self.pixel_data.tolist())#.replace('  ', ' ').replace('\n ',',').replace(' ', ',')
+        return f"GPImage(np.array({np_str}))"
+    
+    __repr__ = __str__

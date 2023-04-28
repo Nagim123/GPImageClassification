@@ -1,5 +1,7 @@
 import numpy as np
 import gp_operators as ops
+
+from tqdm import tqdm
 from gp_dataset import GPDataset
 from gp_tree import GPTree
 import random
@@ -60,7 +62,7 @@ class GPImageClassifier:
         self.elitism = elitism
 
         # Tree definition.
-        pset = gp.PrimitiveSetTyped([GPImage], float)
+        pset = gp.PrimitiveSetTyped("MainTree", [GPImage], float)
         # Function set
         pset.addPrimitive(ops.add, [float, float], float)
         pset.addPrimitive(ops.sub, [float, float], float)
@@ -76,6 +78,11 @@ class GPImageClassifier:
         # Additional info
         shape_names = ["rect", "col", "row", "eps"]
         iw, ih = train_dataset.size[0], train_dataset.size[1]
+        
+        # pset.context["Filter"] = GPFilter
+        # pset.context["Shape"] = GPCutshape
+        # pset.context["Point"] = GPPoint
+        # pset.context["Size"] = GPSize
 
         #Terminal set
         #Generate random kernel filter with values in [-3, 3]
@@ -83,21 +90,19 @@ class GPImageClassifier:
         pset.addEphemeralConstant("Shape", lambda: GPCutshape(shape_names[np.random.randint(0, len(shape_names))]), GPCutshape)
         
         pset.addEphemeralConstant("Point", lambda: GPPoint(
-            iw*np.random.uniform(low=0.05, high=0.9), ih*np.random.uniform(low=0.05, high=0.9),
-            GPCutshape
-        ))
-
+            iw*np.random.uniform(low=0.05, high=0.9), ih*np.random.uniform(low=0.05, high=0.9)
+        ),GPPoint)
+        
         pset.addEphemeralConstant("Size", lambda: GPSize(
             iw*np.random.uniform(low=0.15, high=0.75), ih*np.random.uniform(low=0.15, high=0.75),
-            GPSize
-        ))
-
+        ), GPSize)
         self.pset = pset
-
-        self.population = [GPTree(min_tree_depth, max_tree_depth, pset) for _ in range(population_size)]
+        self.population = [GPTree(pset, min_tree_depth, max_tree_depth) for _ in range(population_size)]
+        
         self.train_dataset = train_dataset
         self.test_dataset = test_dataset
         self.classes = classes
+        print("DONE CREATION")
 
     def fitness(self, individual: GPTree):
         correct = 0
@@ -118,9 +123,18 @@ class GPImageClassifier:
         for _ in range(round(self.crossover_rate * self.population_size)):
             r1, r2 = random.randint(0, self.population_size - 1), random.randint(0, self.population_size - 1)
             children = gp.cxOnePoint(self.population[r1].tree, self.population[r2].tree)
-            self.population += [GPTree(children[0], self.pset), GPTree(children[1], self.pset)]
+            self.population += [GPTree(self.pset, tree=children[0]), GPTree(self.pset, tree=children[1])]
         for i in range(self.population_size):
             if random.uniform(0, 1) > self.mutation_rate:
-                self.population += GPTree(gp.mutNodeReplacement(self.population[i].tree, self.pset), self.pset)
+                self.population += [GPTree(self.pset, tree=gp.mutNodeReplacement(self.population[i].tree, self.pset))]
                 # TODO: different mutations
         self.selection()
+    
+    def fit(self, dataset):
+        bar = tqdm(range(self.generations))
+        for gen in bar:
+            self.evolve()
+
+
+    def get_best(self):
+        return self.population[-1]

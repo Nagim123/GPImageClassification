@@ -15,3 +15,8 @@ class GPPoint:
         """ 
         self.x = x
         self.y = y
+
+    def __str__(self) -> str:
+        return f"GPPoint({self.x},{self.y})"
+    
+    __repr__ = __str__

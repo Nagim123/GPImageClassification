@@ -5,12 +5,29 @@ from gp_terminals.gp_size import GPSize
 from gp_terminals.gp_point import GPPoint
 
 class GPCutshape:
+    """
+    Special terminal to make shaped-cut from image.
+    """
+    
     def __init__(self, type_name: str) -> None:
+        """
+        Initialize Cutshape.
+
+        Parameter
+        ---------
+        type_name: str
+            Type of cut: 'elp', 'row', 'col', 'rec'.
+        """
         self.type_name = type_name
 
     def cut(self, image: GPImage, top_left_corner: GPPoint, size: GPSize) -> np.ndarray:
         """
         Get all values inside a shape.
+
+        Parameter
+        ---------
+        image: GPImage
+            The image.
         """
         
         x, y = top_left_corner.x, top_left_corner.y
@@ -21,9 +38,9 @@ class GPCutshape:
             ellipse_mask = ((mx - x) / w)**2 + ((my - y) / h)**2 <= 1
             return pixel_data[ellipse_mask]
         elif self.type_name == 'row':
-            return image.pixel_data[y, x:x+w]
+            return image.pixel_data[y, x:max(x+w, image.size.w)]
         elif self.type_name == 'col':
-            return image.pixel_data[y:y+h, x]
+            return image.pixel_data[y:max(y+h, image.size.h), x]
         elif self.type_name == 'rec':
-            return image.pixel_data[y:y+h, x:x+w]
+            return image.pixel_data[y:max(y+h, image.size.h), x:max(x+w, image.size.w)]
 

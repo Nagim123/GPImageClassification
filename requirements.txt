@@ -1,0 +1,3 @@
+deap
+graphviz
+numpy

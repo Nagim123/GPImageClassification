@@ -36,9 +36,6 @@ class GPImage:
         return GPImage(result)
     
     def apply_maxpool2x2(self) -> object:
-        if self.size.h % 2 != 0 or self.size.w % 2 != 0:
-            raise Exception(f"To apply max pool image's size must be divisible by two. Shape:{self.size.shape()}")
-        
         result = np.zeros((self.size.h//2, self.size.w//2))
         for i in range(self.size.h - 1, 2):
             for j in range(self.size.w - 1, 2):

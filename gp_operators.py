@@ -41,6 +41,8 @@ def agg_mean(image: GPImage, top_left_corner: GPPoint, size: GPSize, shape: GPCu
     return np.mean(shape.cut(image, top_left_corner, size))
 
 def agg_stdev(image: GPImage, top_left_corner: GPPoint, size: GPSize, shape: GPCutshape) -> float:
+    print("stdev!")
+    print(shape.type_name)
     return np.std(shape.cut(image, top_left_corner, size))
 
 def agg_min(image: GPImage, top_left_corner: GPPoint, size: GPSize, shape: GPCutshape) -> float:
@@ -57,7 +59,7 @@ def conv(image: GPImage, filter: GPFilter) -> GPImage:
     new_image = image.apply_filter(filter)
     #ReLU
     new_image.pixel_data = new_image.pixel_data * (new_image.pixel_data > 0)
-    return 
+    return new_image
 
 def pool(image: GPImage) -> GPImage:
     return image.apply_maxpool2x2()

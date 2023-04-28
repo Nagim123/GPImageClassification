@@ -12,6 +12,8 @@ from gp_terminals.gp_cutshape import GPCutshape
 from gp_terminals.gp_filter import GPFilter
 from gp_terminals.gp_image import GPImage
 
+from gp_operators import agg_max, agg_mean, agg_min, agg_stdev, pool, add, conv
+
 
 class GPImageClassifier:
     """
@@ -76,13 +78,13 @@ class GPImageClassifier:
         pset.addPrimitive(ops.pool, [GPImage], GPImage)
 
         # Additional info
-        shape_names = ["rect", "col", "row", "eps"]
+        shape_names = ["rec", "col", "row", "elp"]
         iw, ih = train_dataset.size[0], train_dataset.size[1]
         
-        # pset.context["Filter"] = GPFilter
-        # pset.context["Shape"] = GPCutshape
-        # pset.context["Point"] = GPPoint
-        # pset.context["Size"] = GPSize
+        pset.context["Filter"] = GPFilter
+        pset.context["Shape"] = GPCutshape
+        pset.context["Point"] = GPPoint
+        pset.context["Size"] = GPSize
 
         #Terminal set
         #Generate random kernel filter with values in [-3, 3]
@@ -90,11 +92,13 @@ class GPImageClassifier:
         pset.addEphemeralConstant("Shape", lambda: GPCutshape(shape_names[np.random.randint(0, len(shape_names))]), GPCutshape)
         
         pset.addEphemeralConstant("Point", lambda: GPPoint(
-            iw*np.random.uniform(low=0.05, high=0.9), ih*np.random.uniform(low=0.05, high=0.9)
+            int(iw*np.random.uniform(low=0.05, high=0.9)),
+            int(ih*np.random.uniform(low=0.05, high=0.9))
         ),GPPoint)
         
         pset.addEphemeralConstant("Size", lambda: GPSize(
-            iw*np.random.uniform(low=0.15, high=0.75), ih*np.random.uniform(low=0.15, high=0.75),
+            int(iw*np.random.uniform(low=0.15, high=0.75)),
+            int(ih*np.random.uniform(low=0.15, high=0.75)),
         ), GPSize)
         self.pset = pset
         self.population = [GPTree(pset, min_tree_depth, max_tree_depth) for _ in range(population_size)]
@@ -138,3 +142,9 @@ class GPImageClassifier:
 
     def get_best(self):
         return self.population[-1]
+
+
+train_dataset = GPDataset("toydataset/train", (20, 20))
+dfn = "lambda ARG0: add(agg_stdev(pool(pool(conv(conv(conv(ARG0, GPFilter(np.array([[1.4750853742645986, 2.217925634734678, -1.452910671550328], [-1.0377072159661902, 1.2274511414191416, -2.17232973222214], [-1.8562016847073597, 1.8131083190287267, -0.03975583387378934]]))), GPFilter(np.array([[-0.8498909470568146, 2.5557504679757557, 2.3213637326538272], [-2.5262083014087757, -0.21983553936789568, -0.06769948216963861], [1.3529076995083484, -1.733522192162067, 0.25437282208981093]]))), GPFilter(np.array([[1.0166347285473951, -0.10742190195121215, 1.230975515028125], [2.077937361531241, 2.389617881048908, -1.2698677433898524], [2.178971457663086, -2.08603465358833, -1.5898664533470726]]))))), GPPoint(12,5), GPSize(14,11), GPCutshape('col')), agg_mean(conv(pool(conv(pool(conv(ARG0, GPFilter(np.array([[2.814737820668662, -2.6284082756506333, -2.353871193777574], [-1.7867007178568683, -2.9642651390247465, -0.019793276587760866], [1.424499082208433, -0.9801296998375639, -1.7936892347200795]])))), GPFilter(np.array([[-1.455701909056084, 0.5148049682042366, 1.0435373057577892], [-2.361942980840026, -1.270867050887598, -1.743855493800901], [-0.6762807003118405, -1.7796328306190998, 0.15413521365338756]])))), GPFilter(np.array([[0.15897893279603648, 1.23230098597239, 1.7208866185363358], [-2.277286600279978, 1.3635288949656446, 2.774295536090584], [1.539791372897039, 2.255695406873995, -0.19855259137973325]]))), GPPoint(16,5), GPSize(5,7), GPCutshape('elp')))"
+dfn = eval(dfn)
+dfn(train_dataset[0][0])

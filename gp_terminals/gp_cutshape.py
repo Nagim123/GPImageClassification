@@ -18,6 +18,9 @@ class GPCutshape:
         type_name: str
             Type of cut: 'elp', 'row', 'col', 'rec'.
         """
+        if not type_name in ['elp', 'row', 'col', 'rec']:
+            raise Exception(f"Undefined cut type {type_name}")
+
         self.type_name = type_name
 
     def cut(self, image: GPImage, top_left_corner: GPPoint, size: GPSize) -> np.ndarray:
@@ -42,8 +45,8 @@ class GPCutshape:
         elif self.type_name == 'col':
             return image.pixel_data[y:max(y+h, image.size.h), x]
         elif self.type_name == 'rec':
+            print(w, " ", h, " ", x, " ", y)
             return image.pixel_data[y:max(y+h, image.size.h), x:max(x+w, image.size.w)]
-
     def __str__(self) -> str:
         return f"GPCutshape('{self.type_name}')"
     

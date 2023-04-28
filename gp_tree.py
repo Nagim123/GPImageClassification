@@ -16,13 +16,11 @@ class GPTree:
             self.tree = tree
         
     def feed(self, image: GPImage) -> float:
-        f = gp.compile(self.tree, self.pset)
-        x = f(image)
-        # try:
-        #     x = gp.compile(self.tree, self.pset)(image)
-        # except:
-        #     print("ERROR!!!")
-        #     print(f"{str(self.tree)}")
+        try:
+            x = gp.compile(self.tree, self.pset)(image)
+        except:
+            print("ERROR!!!")
+            print(f"{str(self.tree)}")
         return self.sigmoid_activation(x)
     
     def sigmoid_activation(self, x):

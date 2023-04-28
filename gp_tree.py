@@ -45,4 +45,8 @@ class GPTree:
         self.tree = gp.PrimitiveTree(self.expr)
     
     def feed(self, image: GPImage) -> float:
-        return gp.compile(self.expr, self.pset)(image)
+        x = gp.compile(self.expr, self.pset)(image)
+        return self.sigmoid_activation(x)
+    
+    def sigmoid_activation(self, x):
+        return 1/(1 + np.exp(-x))

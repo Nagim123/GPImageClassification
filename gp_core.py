@@ -79,15 +79,17 @@ class GPImageClassifier:
 
         #Terminal set
         #Generate random kernel filter with values in [-3, 3]
-        pset.addEphemeralConstant("Filter", lambda: GPFilter((np.random.rand(3,3)-0.5)*6))
-        pset.addEphemeralConstant("Shape", lambda: GPCutshape(shape_names[np.random.randint(0, len(shape_names))]))
+        pset.addEphemeralConstant("Filter", lambda: GPFilter((np.random.rand(3,3)-0.5)*6), GPFilter)
+        pset.addEphemeralConstant("Shape", lambda: GPCutshape(shape_names[np.random.randint(0, len(shape_names))]), GPCutshape)
         
         pset.addEphemeralConstant("Point", lambda: GPPoint(
-            iw*np.random.uniform(low=0.05, high=0.9), ih*np.random.uniform(low=0.05, high=0.9)
+            iw*np.random.uniform(low=0.05, high=0.9), ih*np.random.uniform(low=0.05, high=0.9),
+            GPCutshape
         ))
         
         pset.addEphemeralConstant("Size", lambda: GPSize(
-            iw*np.random.uniform(low=0.15, high=0.75), ih*np.random.uniform(low=0.15, high=0.75)
+            iw*np.random.uniform(low=0.15, high=0.75), ih*np.random.uniform(low=0.15, high=0.75),
+            GPSize
         ))
 
         self.population = [GPTree() for _ in range(population_size)]
@@ -113,9 +115,9 @@ class GPImageClassifier:
     def evolve(self):
         for _ in range(self.crossover_rate * self.population_size // 2):
             r1, r2 = random.randint(self.population_size), random.randint(self.population_size)
-            children = deap.gp.cxOnePoint(self.population[r1].tree, self.population[r2].tree)
+            children = gp.cxOnePoint(self.population[r1].tree, self.population[r2].tree)
             self.population += [GPTree(children[0]), GPTree(children[1])]
         for i in range(self.population_size):
             if random.uniform(0, 1) > self.mutation_rate:
-                self.population += GPTree(deap.gp.mutNodeReplacement())
+                self.population += GPTree(gp.mutNodeReplacement())
         self.selection()

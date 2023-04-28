@@ -77,17 +77,19 @@ class GPImageClassifier:
         shape_names = ["rect", "col", "row", "eps"]
         iw, ih = train_dataset.size[0], train_dataset.size[1]
 
-        # Terminal set
-        # Generate random kernel filter with values in [-3, 3]
-        pset.addEphemeralConstant("Filter", lambda: GPFilter((np.random.rand(3, 3) - 0.5) * 6))
-        pset.addEphemeralConstant("Shape", lambda: GPCutshape(shape_names[np.random.randint(0, len(shape_names))]))
-
+        #Terminal set
+        #Generate random kernel filter with values in [-3, 3]
+        pset.addEphemeralConstant("Filter", lambda: GPFilter((np.random.rand(3,3)-0.5)*6), GPFilter)
+        pset.addEphemeralConstant("Shape", lambda: GPCutshape(shape_names[np.random.randint(0, len(shape_names))]), GPCutshape)
+        
         pset.addEphemeralConstant("Point", lambda: GPPoint(
-            iw * np.random.uniform(low=0.05, high=0.9), ih * np.random.uniform(low=0.05, high=0.9)
+            iw*np.random.uniform(low=0.05, high=0.9), ih*np.random.uniform(low=0.05, high=0.9),
+            GPCutshape
         ))
 
         pset.addEphemeralConstant("Size", lambda: GPSize(
-            iw * np.random.uniform(low=0.15, high=0.75), ih * np.random.uniform(low=0.15, high=0.75)
+            iw*np.random.uniform(low=0.15, high=0.75), ih*np.random.uniform(low=0.15, high=0.75),
+            GPSize
         ))
 
         self.pset = pset

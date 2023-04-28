@@ -1,11 +1,6 @@
 import numpy as np
-import gp_operators as ops
 
 from deap import gp
-from gp_terminals.gp_point import GPPoint
-from gp_terminals.gp_size import GPSize
-from gp_terminals.gp_cutshape import GPCutshape
-from gp_terminals.gp_filter import GPFilter
 from gp_terminals.gp_image import GPImage
 class GPTree:
     def __init__(self, min_depth: int, max_depth: int, pset) -> None:

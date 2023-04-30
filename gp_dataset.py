@@ -11,17 +11,16 @@ class GPDataset:
         self.images = []
         self.size = size_transform
         
-        classes = set()
+        self.classes = []
         for label in os.listdir(path):
             for image_name in os.listdir(path + '/' + label):
                 img = cv2.imread(os.path.join(path + '/' + label, image_name), cv2.IMREAD_GRAYSCALE)
                 if img is not None:
                     img = GPImage(img)
                     self.images.append((img, label))
-                    classes.add(label)
-        self.classes = list(classes)
+            self.classes.append(label)
 
-    def __getitem__(self, item) -> GPImage:
+    def __getitem__(self, item) -> (GPImage, str):
         return self.images[item]
 
     def __len__(self) -> int:

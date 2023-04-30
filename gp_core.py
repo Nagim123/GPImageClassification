@@ -8,12 +8,13 @@ from tqdm import tqdm
 from gp_dataset import GPDataset
 from gp_tree import GPTree
 import random
-from deap import gp
+from deap import gp, base
 from gp_terminals.gp_cutshape import GPCutshape
 from gp_terminals.gp_filter import GPFilter
 from gp_terminals.gp_image import GPImage
 from gp_terminals.gp_percentage import GPPercentage
 from gp_terminals.gp_percentage_size import GPPercentageSize
+from gp_utils.gp_saver import save_gp_tree
 from typing import List
 
 from gp_operators import agg_max, agg_mean, agg_min, agg_stdev, pool, add, conv, mul, div, sub
@@ -104,6 +105,10 @@ class GPImageClassifier:
             np.random.uniform(low=0.15, high=0.75),
             np.random.uniform(low=0.15, high=0.75),
         ), GPPercentageSize)
+
+        self.toolbox = base.Toolbox()
+        self.toolbox.register("expr", deap_fix.genFull, pset=pset, min_=1, max_=3)
+        
         self.pset = pset
         self.population: List[GPTree] = []
 
@@ -126,26 +131,26 @@ class GPImageClassifier:
         """
         Selection of best individuals and removing the worst ones.
         """
-
-        self.population.sort(key=lambda x: -self._fitness(x, dataset))
-        self.population = self.population[:self.population_size]
+        fitness_values = [(x, self._fitness(x, dataset)) for x in self.population]
+        fitness_values.sort(key= lambda t: -t[1])
+        fitness_values = fitness_values[:self.population_size]
+        self.population = [t[0] for t in fitness_values]
 
     def _evolve(self, dataset: GPDataset) -> None:
         """
         Create new generation by crossover/mutation and add it to population.
         """
 
-        print('evolve')
         for _ in range(round(self.crossover_rate * self.population_size)):
             r1, r2 = random.randint(0, self.population_size - 1), random.randint(0, self.population_size - 1)
             children = gp.cxOnePoint(copy.deepcopy(self.population[r1].tree), copy.deepcopy(self.population[r2].tree))
             self.population += [GPTree(self.pset, tree=children[0]), GPTree(self.pset, tree=children[1])]
-            # children = gp.cxOnePointLeafBiased(copy.deepcopy(self.population[r1].tree),
-            #                                    copy.deepcopy(self.population[r2].tree), self.crossover_rate)
-            # self.population += [GPTree(self.pset, tree=children[0]), GPTree(self.pset, tree=children[1])]
-        print('cross finished')
+            children = gp.cxOnePointLeafBiased(copy.deepcopy(self.population[r1].tree),
+                                                copy.deepcopy(self.population[r2].tree), self.crossover_rate)
+            self.population += [GPTree(self.pset, tree=children[0]), GPTree(self.pset, tree=children[1])]
+
         for i in range(self.population_size):
-            if random.uniform(0, 1) > self.mutation_rate:
+            if random.uniform(0, 1) < self.mutation_rate:
                 expr = None
                 while expr is None:
                     try:
@@ -154,16 +159,14 @@ class GPImageClassifier:
                         pass
 
                 self.population += [
-                    # GPTree(self.pset, tree=gp.mutEphemeral(copy.deepcopy(self.population[i].tree), "one")[0]),
-                    # GPTree(self.pset, tree=gp.mutNodeReplacement(copy.deepcopy(self.population[i].tree), self.pset)[0]),
-                    # GPTree(self.pset, tree=gp.mutInsert(copy.deepcopy(self.population[i].tree), self.pset)[0]),
-                    # GPTree(self.pset, tree=gp.mutShrink(copy.deepcopy(self.population[i].tree))[0]),
-                    GPTree(self.pset, tree=gp.mutUniform(copy.deepcopy(self.population[i].tree), expr, self.pset)[0])
+                    #GPTree(self.pset, tree=gp.mutEphemeral(copy.deepcopy(self.population[i].tree), "one")[0]),
+                    #GPTree(self.pset, tree=gp.mutNodeReplacement(copy.deepcopy(self.population[i].tree), self.pset)[0]),
+                    #GPTree(self.pset, tree=gp.mutInsert(copy.deepcopy(self.population[i].tree), self.pset)[0]),
+                    #GPTree(self.pset, tree=gp.mutShrink(copy.deepcopy(self.population[i].tree))[0]),
+                    GPTree(self.pset, tree=gp.mutUniform(copy.deepcopy(self.population[i].tree), self.toolbox.expr, self.pset)[0])
                 ]
-        print('mutation finished')
         self._selection(dataset)
-        print('selection finished')
-        print()
+        save_gp_tree(self.get_best())
 
     def fit(self, dataset) -> None:
         """
@@ -178,10 +181,6 @@ class GPImageClassifier:
                 except:
                     pass
             self.population.append(gptree)
-            print(str(gptree.tree))
-            print()
-            print('*'*10)
-            print()
 
         bar = tqdm(range(self.generations))
         for gen in bar:

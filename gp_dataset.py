@@ -20,7 +20,7 @@ class GPDataset:
                     self.images.append((img, label))
             self.classes.append(label)
 
-    def __getitem__(self, item) -> (GPImage, str):
+    def __getitem__(self, item) -> tuple[GPImage, str]:
         return self.images[item]
 
     def __len__(self) -> int:

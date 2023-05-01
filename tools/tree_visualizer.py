@@ -1,12 +1,9 @@
 import shutil
 import matplotlib.pyplot as plt
 import graphviz
-import numpy as np
-
-from gp_terminals.gp_image import GPImage, GPFilter
-from deap import gp
+from gp_terminals.gp_image import GPImage
 import sys
-import re
+from tools.tree_runner import run_tree
 import os
 import ast
 
@@ -24,7 +21,7 @@ class Node:
         self.parent = parent
         self.children = []
         self.image = False
-        self.data = None
+        self.result = None
         self.dim = ""
 
 
@@ -37,22 +34,22 @@ def draw_array(data, name):
     plt.savefig(f'../outputs/{name}', dpi=20)
 
 
-def tree_parse(content: str, node, nodes):
+def tree_parse(content: str, node, nodes, inp):
     left = content.find('(')
     right = content.rfind(')')
     nodes.append(node)
+    node.result = run_tree(inp, content)
     node.content = content[:left] if left != -1 else content
     content = content[left + 1: right] if left != -1 else content
     if content[1:].isdigit():
         node.content = content
         return
     if node.content == 'GPFilter':
-        table = ast.literal_eval(content)
+        table = ast.literal_eval(content.replace('np.array(', '').replace(')', ''))
         global index
         name = f'./tmp/{index}.png'
         draw_array(table, name)
         node.content = name
-        node.data = GPFilter(np.array(table))
         node.image = True
         index += 1
     elif 'GPPercent' in node.content:
@@ -64,10 +61,7 @@ def tree_parse(content: str, node, nodes):
     elif 'GP' in node.content:
         node.content = f'{node.content}({content})'
     elif node.content == 'ARG0':
-        node.content = './vis.png'
-        node.data = GPImage(plt.imread('../outputs/vis.png'))
-        shape = node.data.pixel_data.shape
-        node.dim = f'{shape[0]}x{shape[1]}'
+        node.content = '../outputs/vis.png'
         node.image = True
     else:
         parentheses, start = 0, 0
@@ -84,26 +78,24 @@ def tree_parse(content: str, node, nodes):
         for child in children:
             child_node = Node(node)
             node.children.append(child_node)
-            tree_parse(child, child_node, nodes)
+            tree_parse(child, child_node, nodes, inp)
 
 
 def visualize_tree(tree: str):
     nodes = []
-    tree_parse(tree, Node(None), nodes)
+    tree_parse(tree, Node(None), nodes, GPImage(plt.imread('../outputs/vis.png')))
 
     for node in nodes[::-1]:
         if node.content == 'conv' or node.content == 'pool':
-            if node.content == 'pool':
-                node.data = node.children[0].data.apply_maxpool2x2()
-            else:
-                node.data = node.children[0].data.apply_filter(node.children[1].data)
-            shape = node.data.pixel_data.shape
+            shape = node.result.pixel_data.shape
             node.dim = f'{shape[0]}x{shape[1]}'
             node.image = True
             global index
             index += 1
             node.content = f'./tmp/{index}.png'
-            plt.imsave(f'../outputs/tmp/{index}.png', node.data.pixel_data, cmap='gray')
+            plt.imsave(f'../outputs/tmp/{index}.png', node.result.pixel_data, cmap='gray')
+        elif 'GP' not in node.content and not node.image and not node.content[1:].isdigit():
+            node.content += '\n' + str(node.result)
 
 
 
@@ -126,9 +118,4 @@ def visualize_tree(tree: str):
 
 
 tree_str = open("../outputs/best_result_tree.txt", "r").readline()
-pattern = r"np\.array\((.*?)\)"
-matches = re.findall(pattern, tree_str)
-for match in matches:
-    replaced = match.replace(", ", ",")
-    tree_str = tree_str.replace(f"np.array({match})", replaced)
 visualize_tree(tree_str)

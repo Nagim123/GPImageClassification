@@ -23,6 +23,10 @@ class GPDataset:
     def __getitem__(self, item) -> tuple[GPImage, str]:
         return self.images[item]
 
+    def __iter__(self):
+        for image in self.images:
+            yield image
+
     def __len__(self) -> int:
         return len(self.images)
 

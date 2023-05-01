@@ -9,6 +9,7 @@ from gp_structures.gp_dataset import GPDataset
 from gp_structures.gp_tree import GPTree
 from gp_utils.gp_saver import save_gp_tree
 from tools.pset_generator import generate_pset
+from sklearn.metrics import accuracy_score
 
 class GPImageClassifier:
     """
@@ -60,54 +61,30 @@ class GPImageClassifier:
         self.toolbox = base.Toolbox()
         self.toolbox.register("expr", deap_fix.genFull, pset=self.pset, min_=1, max_=3)
 
-    def _fitness(self, individual: GPTree, dataset: GPDataset) -> float:
+    def fit(self, dataset: GPDataset) -> None:
         """
-        Calculate fitness value of individual based on accuracy.
+        Fit training dataset to classifier.
 
         Parameter
         ---------
-        individual: GPTree
-            Individual for fitness calculation.
         dataset: GPDataset
-            Dataset that will be used to estimate accuracy.
+            Dataset that will be used by classifier.
+        """
         
-        Returns
-        -------
-        float: The fitness value.
-        """
-
-        correct = 0
-        for i in range(len(dataset)):
-            pred = individual.predict(dataset[i][0])
-            pred = dataset.classes[1] if pred > 0.5 else dataset.classes[0]
-            correct += pred == dataset[i][1]
-        return correct / len(dataset)
-
-    def _selection(self) -> None:
-        """
-        Selection of best individuals and removing the worst ones.
-        """
-        fitness_values = [(x, self._fitness(x, self.dataset)) for x in self.population]
-        fitness_values.sort(key= lambda t: -t[1])
-        fitness_values = fitness_values[:self.population_size]
-        self.population = [t[0] for t in fitness_values]
-
-    def _mutation(self, individual: GPTree) -> list[GPTree]:
-        mutated_individuals = [
-            #GPTree(self.pset, tree=gp.mutEphemeral(deepcopy(individual.tree), "one")[0]),
-            #GPTree(self.pset, tree=gp.mutNodeReplacement(deepcopy(individual.tree), self.pset)[0]),
-            #GPTree(self.pset, tree=gp.mutInsert(deepcopy(individual.tree), self.pset)[0]),
-            #GPTree(self.pset, tree=gp.mutShrink(deepcopy(individual.tree))[0]),
-            GPTree(self.pset, tree=gp.mutUniform(deepcopy(individual.tree), self.toolbox.expr, self.pset)[0])
+        # Generate populatiom
+        self.population = [
+            GPTree(self.pset, self.min_tree_depth, self.max_tree_depth)
+            for _ in range(self.population_size)
         ]
-        
-        return mutated_individuals
 
-    def _crossover(self, parent1: GPTree, parent2: GPTree) -> list[GPTree]:
-        children = []
-        children += list(gp.cxOnePoint(deepcopy(parent1.tree), deepcopy(parent2.tree)))
-        children += list(gp.cxOnePointLeafBiased(deepcopy(parent1.tree), deepcopy(parent2.tree), self.crossover_rate))
-        return [GPTree(self.pset, tree=tree) for tree in children]
+        # Store dataset
+        self.dataset = dataset
+
+        # Start genetic loop
+        bar = tqdm(range(self.generations))
+        for _ in bar:
+            self._evolve()
+            bar.set_postfix({"best:": self._fitness(self.get_best(), dataset)})
 
     def _evolve(self) -> None:
         """
@@ -136,30 +113,70 @@ class GPImageClassifier:
         # Save current best tree
         save_gp_tree(self.get_best())
 
-    def fit(self, dataset: GPDataset) -> None:
+    def _mutation(self, individual: GPTree) -> list[GPTree]:
         """
-        Fit training dataset to classifier.
+        Perform mutation.
+        """
+        
+        mutated_individuals = [
+            #GPTree(self.pset, tree=gp.mutEphemeral(deepcopy(individual.tree), "one")[0]),
+            #GPTree(self.pset, tree=gp.mutNodeReplacement(deepcopy(individual.tree), self.pset)[0]),
+            #GPTree(self.pset, tree=gp.mutInsert(deepcopy(individual.tree), self.pset)[0]),
+            #GPTree(self.pset, tree=gp.mutShrink(deepcopy(individual.tree))[0]),
+            GPTree(self.pset, tree=gp.mutUniform(deepcopy(individual.tree), self.toolbox.expr, self.pset)[0])
+        ]
+        
+        return mutated_individuals
+
+    def _crossover(self, parent1: GPTree, parent2: GPTree) -> list[GPTree]:
+        """
+        Perform crossover.
+        """
+        
+        children = []
+        children += list(gp.cxOnePoint(deepcopy(parent1.tree), deepcopy(parent2.tree)))
+        children += list(gp.cxOnePointLeafBiased(deepcopy(parent1.tree), deepcopy(parent2.tree), self.crossover_rate))
+        return [GPTree(self.pset, tree=tree) for tree in children]
+
+    def _selection(self) -> None:
+        """
+        Selection of best individuals and removing the worst ones.
+        """
+
+        fitness_values = [(x, self._fitness(x)) for x in self.population]
+        fitness_values.sort(key= lambda t: -t[1])
+        fitness_values = fitness_values[:self.population_size]
+        self.population = [t[0] for t in fitness_values]
+
+
+    def _fitness(self, individual: GPTree) -> float:
+        """
+        Calculate fitness value of individual based on accuracy.
 
         Parameter
         ---------
-        dataset: GPDataset
-            Dataset that will be used by classifier.
+        individual: GPTree
+            Individual for fitness calculation.
+
+        Returns
+        -------
+        float: The fitness value.
         """
+        return self.evaluate(individual, self.dataset, accuracy_score)
+
+    def evaluate(self, gptree: GPTree, dataset: GPDataset, metric) -> float:
+        """
+        Evaluate specific tree on dataset by specified metric.
+        """
+
+        predictions = []
+        true_values = []
+        for x in dataset:
+            pred = gptree.predict(x[0])
+            predictions.append(dataset.classes[1] if pred > 0.5 else dataset.classes[0])
+            true_values.append(x[1])
         
-        # Generate populatiom
-        self.population = [
-            GPTree(self.pset, self.min_tree_depth, self.max_tree_depth)
-            for _ in range(self.population_size)
-        ]
-
-        # Store dataset
-        self.dataset = dataset
-
-        # Start genetic loop
-        bar = tqdm(range(self.generations))
-        for _ in bar:
-            self._evolve()
-            bar.set_postfix({"best:": self._fitness(self.get_best(), dataset)})
+        return metric(true_values, predictions)
 
     def get_best(self) -> GPTree:
         """
@@ -171,14 +188,3 @@ class GPImageClassifier:
         """
 
         return self.population[0]
-
-    def predict(self, dataset: GPDataset) -> list[float]:
-        """
-        Predict data on specific dataset.
-        """
-
-        if self.population is None:
-            raise RuntimeError("Call fit() before predict()!")
-
-        the_best = self.get_best()
-        return [the_best.predict(dataset[i][0]) for i in range(len(dataset))]

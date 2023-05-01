@@ -28,6 +28,10 @@ def parallel_fitness(fitness_fn, population: list, n_processes: int) -> list[tup
         List of GPTree individuals.
     n_processes: int
         Number of processes to spawn.
+
+    Returns
+    -------
+    list[tuple[GPTree, float]]: Pairs of GPTree individuals and ther fitness values.
     """
 
     if n_processes == 1:

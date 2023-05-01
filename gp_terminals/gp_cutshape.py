@@ -36,10 +36,10 @@ class GPCutshape:
         x, y = top_left_corner.x, top_left_corner.y
         w, h = size.w, size.h
         if self.type_name == 'elp':
+            pixel_data = image.pixel_data
             if w == 0 or h == 0:
                 return pixel_data.copy()
             
-            pixel_data = image.pixel_data
             mx, my = np.meshgrid(np.arange(pixel_data.shape[1]), np.arange(pixel_data.shape[0]))
             ellipse_mask = ((mx - x) / w)**2 + ((my - y) / h)**2 <= 1
             return pixel_data[ellipse_mask].copy()

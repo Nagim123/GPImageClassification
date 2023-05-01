@@ -10,5 +10,7 @@ from gp_operators import agg_max, agg_mean, agg_min, agg_stdev, pool, add, conv,
 from deap import gp
 
 def run_tree(input: GPImage, tree: gp.PrimitiveTree) :
+    #print(f"RUN!\n {tree}")
     lambda_function = eval('lambda ARG0: ' + str(tree))
+    #print("FINISH")
     return lambda_function(input)

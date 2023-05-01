@@ -1,6 +1,7 @@
 import numpy as np
 from gp_utils.gp_size import GPSize
 from gp_terminals.gp_filter import GPFilter
+from autograd.scipy import signal
 
 class GPImage:
     """
@@ -24,30 +25,25 @@ class GPImage:
         """
         Apply kernel filter to image by convolution process.
         """
-        
-        f = filter.size
-        pixel_data = np.pad(self.pixel_data, (f - 1)//2)
-        
-        result = np.zeros(self.pixel_data.shape)
-        for i in range(pixel_data.shape[0] - f + 1):
-            for j in range(pixel_data.shape[1] - f + 1):
-                result[i][j] = filter.apply_to_matrix(pixel_data[i:i+f, j:j+f])
-
-        return GPImage(result)
+        return GPImage(signal.convolve(self.pixel_data, filter.filter_data, mode='valid'))
     
     def apply_maxpool2x2(self) -> object:
         """
         Apply max pool 2d with size 2x2 and stride equal to 2.
         """
+        result = self.pixel_data.copy()
+        w, h = self.size.w, self.size.h
+
+        if w == 1 and h == 1:
+            return GPImage(result)
+
+        if h % 2 != 0:
+            result = result[:-1,:]
+        if w % 2 != 0:
+            result = result[:,:-1]
+        h, w = result.shape
         
-        if self.size.h == 1 and self.size.w == 1:
-            return GPImage(self.pixel_data.copy())
-        result = np.zeros((self.size.h//2, self.size.w//2))
-        for i in range(self.size.h - 1, 2):
-            for j in range(self.size.w - 1, 2):
-                result[i//2][j//2] = np.max(self.pixel_data[i:i+1, j:j+1])
-        
-        return GPImage(result)
+        return GPImage(result.reshape(h//2, 2, w//2, 2).max(axis=(1,3)))
     
     def __str__(self) -> str:
         np_str = str(self.pixel_data.tolist())

@@ -1,10 +1,35 @@
 from multiprocessing import Process, Queue
 
 def calculate_fitness_pairs(fitness_fn, part: list, result_queue: Queue):
+    """
+    Calculate fitness value and part of tree from population pairs for future sorting.
+
+    Parameter
+    ---------
+    fitness_fn: function
+        Reference to fitness function.
+    part: list
+        Part of population.
+    result_queue: Queue
+        Queue to get results.
+    """
     fitness_values = [(x, fitness_fn(x)) for x in part]
     result_queue.put(fitness_values)
 
 def parallel_fitness(fitness_fn, population: list, n_processes: int) -> list[tuple[any, float]]:
+    """
+    Fitness calculation implemented in parallel. (LINUX ONLY!!!)
+
+    Parameter
+    ---------
+    fitness_fn: function
+        Reference to fitness function.
+    population: list
+        List of GPTree individuals.
+    n_processes: int
+        Number of processes to spawn.
+    """
+
     if n_processes == 1:
         return [(x, fitness_fn(x)) for x in population]
 

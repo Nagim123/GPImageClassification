@@ -3,8 +3,8 @@ from gp_structures.gp_dataset import GPDataset
 from sklearn.metrics import accuracy_score
 
 def main():
-    train_dataset = GPDataset("dataset/train", (1024, 1024))
-    test_dataset = GPDataset("dataset/test", (1024, 1024))
+    train_dataset = GPDataset("dataset/train", (20, 20))
+    test_dataset = GPDataset("dataset/test", (20, 20))
     gp = GPImageClassifier(population_size=20, generations=15, n_processes=4)
     gp.fit(train_dataset)
 

@@ -31,10 +31,7 @@ def mul(a: float, b: float) -> float:
 
 # Protected division
 def div(a: float, b: float) -> float:
-    if b == 0:
-        return 1.0
-    else:
-        return a / b
+    return 1.0 if b == 0 else a / b
 
 # ========================
 # Aggregation operators.

@@ -1,24 +1,15 @@
-import numpy as np
-
-import gp_patch.deap_fix as deap_fix
-import gp_operators as ops
 import copy
+import random
+import gp_patch.deap_fix as deap_fix
 
 from tqdm import tqdm
-from gp_structures.gp_dataset import GPDataset
-from gp_structures.gp_tree import GPTree
-import random
 from deap import gp, base
-from gp_terminals.gp_cutshape import GPCutshape
-from gp_terminals.gp_filter import GPFilter
-from gp_terminals.gp_image import GPImage
-from gp_terminals.gp_percentage import GPPercentage
-from gp_terminals.gp_percentage_size import GPPercentageSize
-from gp_utils.gp_saver import save_gp_tree
 from typing import List
 
-from gp_operators import agg_max, agg_mean, agg_min, agg_stdev, pool, add, conv, mul, div, sub
-
+from gp_structures.gp_dataset import GPDataset
+from gp_structures.gp_tree import GPTree
+from gp_utils.gp_saver import save_gp_tree
+from tools.pset_generator import generate_pset
 
 class GPImageClassifier:
     """
@@ -65,51 +56,10 @@ class GPImageClassifier:
         self.crossover_rate = crossover_rate
         self.elitism = elitism
 
-        # Tree definition.
-        pset = gp.PrimitiveSetTyped("MainTree", [GPImage], float)
-        # Function set
-        pset.addPrimitive(ops.add, [float, float], float)
-        pset.addPrimitive(ops.sub, [float, float], float)
-        pset.addPrimitive(ops.mul, [float, float], float)
-        pset.addPrimitive(ops.div, [float, float], float)
-        pset.addPrimitive(ops.agg_mean, [GPImage, GPPercentage, GPPercentageSize, GPCutshape], float)
-        pset.addPrimitive(ops.agg_stdev, [GPImage, GPPercentage, GPPercentageSize, GPCutshape], float)
-        pset.addPrimitive(ops.agg_max, [GPImage, GPPercentage, GPPercentageSize, GPCutshape], float)
-        pset.addPrimitive(ops.agg_min, [GPImage, GPPercentage, GPPercentageSize, GPCutshape], float)
-        pset.addPrimitive(ops.conv, [GPImage, GPFilter], GPImage)
-        pset.addPrimitive(ops.pool, [GPImage], GPImage)
-
-        # Additional info
-        shape_names = ["rec", "col", "row", "elp"]
-
-        pset.context["Filter"] = GPFilter
-        pset.context["Shape"] = GPCutshape
-        pset.context["Point"] = GPPercentage
-        pset.context["Size"] = GPPercentageSize
-        pset.context["Constant"] = float
-
-        # Terminal set
-        # Generate random kernel filter with values in [-3, 3]
-        pset.addEphemeralConstant("Filter", lambda: GPFilter(np.random.randint(-3, 3, size=(3, 3))), GPFilter)
-        pset.addEphemeralConstant("Shape", lambda: GPCutshape(shape_names[np.random.randint(0, len(shape_names))]),
-                                  GPCutshape)
-
-        pset.addEphemeralConstant("Constant", lambda: np.random.randint(-5, 5), float)
-
-        pset.addEphemeralConstant("Point", lambda: GPPercentage(
-            np.random.uniform(low=0.05, high=0.9),
-            np.random.uniform(low=0.05, high=0.9)
-        ), GPPercentage)
-
-        pset.addEphemeralConstant("Size", lambda: GPPercentageSize(
-            np.random.uniform(low=0.15, high=0.75),
-            np.random.uniform(low=0.15, high=0.75),
-        ), GPPercentageSize)
-
-        self.toolbox = base.Toolbox()
-        self.toolbox.register("expr", deap_fix.genFull, pset=pset, min_=1, max_=3)
         
-        self.pset = pset
+        self.pset = generate_pset()
+        self.toolbox = base.Toolbox()
+        self.toolbox.register("expr", deap_fix.genFull, pset=self.pset, min_=1, max_=3)
         self.population: List[GPTree] = []
 
     def _fitness(self, individual: GPTree, dataset: GPDataset) -> float:
@@ -120,10 +70,7 @@ class GPImageClassifier:
         correct = 0
         for i in range(len(dataset)):
             pred = individual.predict(dataset[i][0])
-            if pred > 0.5:
-                pred = dataset.classes[1]
-            else:
-                pred = dataset.classes[0]
+            pred = dataset.classes[1] if pred > 0.5 else dataset.classes[0]
             correct += pred == dataset[i][1]
         return correct / len(dataset)
 
@@ -141,6 +88,7 @@ class GPImageClassifier:
         Create new generation by crossover/mutation and add it to population.
         """
 
+        # Perform crossover
         for _ in range(round(self.crossover_rate * self.population_size)):
             r1, r2 = random.randint(0, self.population_size - 1), random.randint(0, self.population_size - 1)
             children = gp.cxOnePoint(copy.deepcopy(self.population[r1].tree), copy.deepcopy(self.population[r2].tree))
@@ -149,15 +97,9 @@ class GPImageClassifier:
                                                 copy.deepcopy(self.population[r2].tree), self.crossover_rate)
             self.population += [GPTree(self.pset, tree=children[0]), GPTree(self.pset, tree=children[1])]
 
+        # Perform mutation
         for i in range(self.population_size):
             if random.uniform(0, 1) < self.mutation_rate:
-                expr = None
-                while expr is None:
-                    try:
-                        expr = deap_fix.genFull(self.pset, self.min_tree_depth, self.max_tree_depth)
-                    except:
-                        pass
-
                 self.population += [
                     #GPTree(self.pset, tree=gp.mutEphemeral(copy.deepcopy(self.population[i].tree), "one")[0]),
                     #GPTree(self.pset, tree=gp.mutNodeReplacement(copy.deepcopy(self.population[i].tree), self.pset)[0]),
@@ -165,25 +107,26 @@ class GPImageClassifier:
                     #GPTree(self.pset, tree=gp.mutShrink(copy.deepcopy(self.population[i].tree))[0]),
                     GPTree(self.pset, tree=gp.mutUniform(copy.deepcopy(self.population[i].tree), self.toolbox.expr, self.pset)[0])
                 ]
+        
+        # Perform selection
         self._selection(dataset)
+        # Save current best tree
         save_gp_tree(self.get_best())
 
-    def fit(self, dataset) -> None:
+    def fit(self, dataset: GPDataset) -> None:
         """
         Fit training dataset to classifier.
         """
 
-        for _ in range(self.population_size):
-            gptree = None
-            while gptree == None:
-                try:
-                    gptree = GPTree(self.pset, self.min_tree_depth, self.max_tree_depth)
-                except:
-                    pass
-            self.population.append(gptree)
+        # Generate populatiom
+        self.population = [
+            GPTree(self.pset, self.min_tree_depth, self.max_tree_depth)
+            for _ in range(self.population_size)
+        ]
 
+        # Start genetic loop
         bar = tqdm(range(self.generations))
-        for gen in bar:
+        for _ in bar:
             self._evolve(dataset)
             bar.set_postfix({"best:": self._fitness(self.get_best(), dataset)})
 
@@ -194,17 +137,13 @@ class GPImageClassifier:
 
         return self.population[0]
 
-    def predict(self, dataset) -> List[float]:
+    def predict(self, dataset: GPDataset) -> List[float]:
         """
         Predict data on specific dataset.
         """
 
         if (len(self.population) == 0):
-            raise Exception("Call fit() before predict()!")
+            raise RuntimeError("Call fit() before predict()!")
 
         the_best = self.get_best()
-        result = []
-
-        for i in range(len(dataset)):
-            result.append(the_best.predict(dataset[i][0]))
-        return result
+        return [the_best.predict(dataset[i][0]) for i in range(len(dataset))]

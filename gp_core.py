@@ -3,12 +3,14 @@ import gp_patch.deap_fix as deap_fix
 
 from tqdm import tqdm
 from copy import deepcopy
-from deap import gp, base
+from deap.gp import mutUniform, cxOnePoint, cxOnePointLeafBiased
+from deap.base import Toolbox
+from gp_parallel import parallel_fitness
 
 from gp_structures.gp_dataset import GPDataset
 from gp_structures.gp_tree import GPTree
 from gp_utils.gp_saver import save_gp_tree
-from tools.pset_generator import generate_pset
+from gp_tools.pset_generator import generate_pset
 from sklearn.metrics import accuracy_score
 
 class GPImageClassifier:
@@ -24,7 +26,8 @@ class GPImageClassifier:
                  tournament_size: int = 7,
                  mutation_rate: float = 0.2,
                  crossover_rate: float = 0.5,
-                 elitism: int = 10
+                 elitism: int = 10,
+                 n_processes = 4
                  ) -> None:
         """
         Initialize Genetic Programming algorithm.
@@ -55,10 +58,11 @@ class GPImageClassifier:
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
         self.elitism = elitism
+        self.n_procceses = n_processes
 
         
         self.pset = generate_pset()
-        self.toolbox = base.Toolbox()
+        self.toolbox = Toolbox()
         self.toolbox.register("expr", deap_fix.genFull, pset=self.pset, min_=1, max_=3)
         self.metric = accuracy_score
 
@@ -102,7 +106,6 @@ class GPImageClassifier:
             if random.uniform(0, 1) < self.crossover_rate:
                 parent1, parent2 = random.sample(old_population, 2)
                 self.population += self._crossover(parent1, parent2)
-        
         # Perform selection
         self._selection()
         # Save current best tree
@@ -127,7 +130,7 @@ class GPImageClassifier:
             #GPTree(self.pset, tree=gp.mutNodeReplacement(deepcopy(individual.tree), self.pset)[0]),
             #GPTree(self.pset, tree=gp.mutInsert(deepcopy(individual.tree), self.pset)[0]),
             #GPTree(self.pset, tree=gp.mutShrink(deepcopy(individual.tree))[0]),
-            GPTree(self.pset, tree=gp.mutUniform(deepcopy(individual.tree), self.toolbox.expr, self.pset)[0])
+            GPTree(self.pset, tree=mutUniform(deepcopy(individual.tree), self.toolbox.expr, self.pset)[0])
         ]
         
         return mutated_individuals
@@ -149,8 +152,8 @@ class GPImageClassifier:
         """
         
         children = []
-        children += list(gp.cxOnePoint(deepcopy(parent1.tree), deepcopy(parent2.tree)))
-        children += list(gp.cxOnePointLeafBiased(deepcopy(parent1.tree), deepcopy(parent2.tree), self.crossover_rate))
+        children += list(cxOnePoint(deepcopy(parent1.tree), deepcopy(parent2.tree)))
+        children += list(cxOnePointLeafBiased(deepcopy(parent1.tree), deepcopy(parent2.tree), self.crossover_rate))
         return [GPTree(self.pset, tree=tree) for tree in children]
 
     def _selection(self) -> None:
@@ -158,7 +161,7 @@ class GPImageClassifier:
         Selection of best individuals and removing the worst ones.
         """
 
-        fitness_values = [(x, self._fitness(x)) for x in self.population]
+        fitness_values = parallel_fitness(self._fitness, self.population, self.n_procceses)
         fitness_values.sort(key= lambda t: -t[1])
         fitness_values = fitness_values[:self.population_size]
         self.population = [t[0] for t in fitness_values]

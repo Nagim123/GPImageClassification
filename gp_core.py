@@ -27,7 +27,8 @@ class GPImageClassifier:
                  mutation_rate: float = 0.2,
                  crossover_rate: float = 0.5,
                  elitism: int = 10,
-                 n_processes = 4
+                 n_processes = 4,
+                 sport_mode = True
                  ) -> None:
         """
         Initialize Genetic Programming algorithm.
@@ -84,6 +85,12 @@ class GPImageClassifier:
 
         # Store dataset
         self.dataset = dataset
+
+        if self.sport_mode:
+            fitness_values = parallel_fitness(self._fitness, self.population, self.n_procceses)
+            self.population = [t[0] for t in fitness_values]
+            for i in range(self.population_size):
+                self.population[i].score = fitness_values[i][1]
 
         # Start genetic loop
         bar = tqdm(range(self.generations))
@@ -161,10 +168,19 @@ class GPImageClassifier:
         Selection of best individuals and removing the worst ones.
         """
 
-        fitness_values = parallel_fitness(self._fitness, self.population, self.n_procceses)
-        fitness_values.sort(key= lambda t: -t[1])
-        fitness_values = fitness_values[:self.population_size]
-        self.population = [t[0] for t in fitness_values]
+        if not self.sport_mode:
+            fitness_values = parallel_fitness(self._fitness, self.population, self.n_procceses)
+            fitness_values.sort(key= lambda t: -t[1])
+            fitness_values = fitness_values[:self.population_size]
+            self.population = [t[0] for t in fitness_values]
+        else:
+            fitness_values = [(self.population[i], self.population[i].score) for i in range(self.population_size)]
+            fitness_values += parallel_fitness(self._fitness, self.population[self.population_size:], self.n_procceses)
+            fitness_values.sort(key= lambda t: -t[1])
+            fitness_values = fitness_values[:self.population_size]
+            self.population = [t[0] for t in fitness_values]
+            for i in range(self.population_size):
+                self.population[i].score = fitness_values[i][1]
 
 
     def _fitness(self, individual: GPTree) -> float:

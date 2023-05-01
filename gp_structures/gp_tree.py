@@ -34,6 +34,7 @@ class GPTree:
 
         """
         self.pset = pset
+        self.score = 0
         if tree is None:
             expr = deap_fix.genFull(pset, min_=min_depth, max_=max_depth)
             self.tree = PrimitiveTree(expr)

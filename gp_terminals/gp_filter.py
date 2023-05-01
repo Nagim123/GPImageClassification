@@ -24,21 +24,7 @@ class GPFilter:
 
         self.filter_data = filter_data
         self.size = filter_data.shape[0]
-
-    def apply_to_matrix(self, matrix: np.ndarray) -> float:
-        """
-        Elementwise multiplication of filter matrix and some other matrix
-        and then aggregation of all values by sum.
-        """
         
-        if self.filter_data.shape != matrix.shape:
-            raise Exception(f"""
-                Try to apply filter to matrix with different shape.\n
-                Expected: {self.filter_data.shape}; Got: {matrix.shape};
-            """)
-
-        return np.sum(np.multiply(self.filter_data, matrix))
-    
     def __str__(self) -> str:
         np_str = str(self.filter_data.tolist())
         return f"GPFilter(np.array({np_str}))"

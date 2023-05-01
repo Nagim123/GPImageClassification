@@ -25,7 +25,7 @@ def parallel_fitness(fitness_fn, population: list, n_processes: int) -> list[tup
     result_queue = Queue()
     processes = []
     for part in parts:
-        p = Process(target=calculate_fitness_pairs, args=(fitness_fn, 2, result_queue,))
+        p = Process(target=calculate_fitness_pairs, args=(fitness_fn, part, result_queue,))
         p.start()
         processes.append(p)
 

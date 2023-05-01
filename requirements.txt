@@ -1,7 +1,7 @@
 deap
 graphviz
 numpy
-sklearn
 tqdm
 autograd
 Pillow
+scikit-learn

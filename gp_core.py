@@ -60,6 +60,7 @@ class GPImageClassifier:
         self.pset = generate_pset()
         self.toolbox = base.Toolbox()
         self.toolbox.register("expr", deap_fix.genFull, pset=self.pset, min_=1, max_=3)
+        self.metric = accuracy_score
 
     def fit(self, dataset: GPDataset) -> None:
         """
@@ -84,7 +85,7 @@ class GPImageClassifier:
         bar = tqdm(range(self.generations))
         for _ in bar:
             self._evolve()
-            bar.set_postfix({"best:": self._fitness(self.get_best(), dataset)})
+            bar.set_postfix({"best:": self.evaluate(self.get_best(), dataset, self.metric)})
 
     def _evolve(self) -> None:
         """
@@ -162,7 +163,7 @@ class GPImageClassifier:
         -------
         float: The fitness value.
         """
-        return self.evaluate(individual, self.dataset, accuracy_score)
+        return self.evaluate(individual, self.dataset, self.metric)
 
     def evaluate(self, gptree: GPTree, dataset: GPDataset, metric) -> float:
         """

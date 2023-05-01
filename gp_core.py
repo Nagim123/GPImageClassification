@@ -91,23 +91,17 @@ class GPImageClassifier:
         """
         Create new generation by crossover/mutation and add it to population.
         """
-
+        old_population = self.population.copy()
         # Loop through each individual
-        for i in range(self.population_size):
-            individual = self.population[i]
+        for individual in old_population:
             # Mutation
             if random.uniform(0, 1) < self.mutation_rate:
                 self.population += self._mutation(individual)
             
             # Crossover
             if random.uniform(0, 1) < self.crossover_rate:
-                ind1 = random.randint(0, self.population_size-1)
-                ind2 = random.randint(0, self.population_size-1)
-                while ind1 == ind2:
-                    ind1 = random.randint(0, self.population_size-1)
-                    ind2 = random.randint(0, self.population_size-1)
-                
-                self.population += self._crossover(self.population[ind1], self.population[ind2])
+                parent1, parent2 = random.sample(old_population, 2)
+                self.population += self._crossover(parent1, parent2)
         
         # Perform selection
         self._selection()
@@ -117,6 +111,15 @@ class GPImageClassifier:
     def _mutation(self, individual: GPTree) -> list[GPTree]:
         """
         Perform mutation.
+
+        Parameter
+        ---------
+        individual: GPTree
+            Individual for muation.
+
+        Returns
+        -------
+        list[GPTree]: Mutated individuals from different mutation operations.
         """
         
         mutated_individuals = [
@@ -132,6 +135,17 @@ class GPImageClassifier:
     def _crossover(self, parent1: GPTree, parent2: GPTree) -> list[GPTree]:
         """
         Perform crossover.
+
+        Parameter
+        ---------
+        parent1: GPTree
+            First parent for crossover.
+        parent2: GPTree
+            Second parent for crossover.
+
+        Returns
+        -------
+        list[GPTree]: Children from different crossover operations.
         """
         
         children = []
@@ -168,6 +182,17 @@ class GPImageClassifier:
     def evaluate(self, gptree: GPTree, dataset: GPDataset, metric) -> float:
         """
         Evaluate specific tree on dataset by specified metric.
+
+        Parameter
+        ---------
+        individual: GPTree
+            Individual for evaluation.
+        dataset: GPDataset
+            Dataset for evaluation.
+
+        Returns
+        -------
+        float: Result of evaluation.
         """
 
         predictions = []

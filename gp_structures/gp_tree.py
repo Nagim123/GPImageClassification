@@ -8,7 +8,7 @@ from gp_terminals.gp_image import GPImage
 def sigmoid_activation(x):
     # To avoid overflow
     x = np.clip(x, -10, 10)
-    
+
     return 1/(1 + np.exp(-x))
 
 
@@ -20,6 +20,17 @@ class GPTree:
     def __init__(self, pset, min_depth: int = 2, max_depth: int = 10, tree: gp.PrimitiveTree = None) -> None:
         """
         Create a new tree.
+        
+        Parameter
+        ---------
+        pset: PrimitiveTypedSet
+            Primitive set to generate a tree.
+        min_depth: int
+            Minimum depth of the tree.
+        max_depth: int
+            Maximum depth of the tree.
+        tree: PrimitiveTree
+            If specified then create class based on created tree.
 
         """
         self.pset = pset
@@ -32,6 +43,15 @@ class GPTree:
     def predict(self, image: GPImage) -> np.float64:
         """
         Predict class based on argument.
+
+        Parameter
+        ---------
+        image: GPImage
+            Image for class prediction.
+        
+        Returns
+        -------
+        np.float64: Result of prediction.
         """
         x = run_tree(image, self.tree)
         return sigmoid_activation(x)

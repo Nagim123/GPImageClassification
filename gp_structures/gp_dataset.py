@@ -8,6 +8,16 @@ class GPDataset:
     """
     
     def __init__(self, path: str, size_transform: tuple[int, int]) -> None:
+        """
+        Create a dataset.
+        
+        Parameter
+        ---------
+        path: str
+            Path to folder with train and test folders that contain images.
+        size_transform: tuple[int, int]
+            Transformations to apply to each image.
+        """
         self.images = []
         self.size = size_transform
         

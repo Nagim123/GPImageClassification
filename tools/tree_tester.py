@@ -1,6 +1,6 @@
 import argparse
 import cv2
-from tree_runner import run_tree
+from tools.tree_runner import run_tree
 from gp_terminals.gp_image import GPImage
 
 parser = argparse.ArgumentParser(description="Test best generated tree on 1 example.")

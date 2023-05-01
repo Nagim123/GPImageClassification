@@ -54,7 +54,6 @@ def visualize_tree(tree: str):
     labels = {}
     ind = 0
     tree_parse(tree, edges, labels)
-    print(labels)
 
     dot = 'digraph G {\n'
     dot += 'node [shape=circle, style=filled, color=lightblue];\n'
@@ -67,6 +66,6 @@ def visualize_tree(tree: str):
     dot += '}'
 
     graph = graphviz.Source(dot)
-    graph.render('tree')
+    graph.render('tree', 'outputs/')
 
-visualize_tree(open("best_result_tree.txt", "r").read())
+visualize_tree(open("outputs/best_result_tree.txt", "r").read())

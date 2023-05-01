@@ -1,6 +1,6 @@
 import numpy as np
-import deap_fix
-from tree_runner import run_tree
+import gp_patch.deap_fix as deap_fix
+from tools.tree_runner import run_tree
 from deap import gp
 from gp_terminals.gp_image import GPImage
 

@@ -1,5 +1,4 @@
 **/__pycache__/
-tree.pdf
-tree
-toydataset/*
+outputs/*
+dataset/*
 opencmd.cmd

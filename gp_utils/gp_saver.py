@@ -1,4 +1,4 @@
-from gp_tree import GPTree
+from gp_structures.gp_tree import GPTree
 
 def save_gp_tree(gptree : GPTree):
     output_file = open("best_result_tree.txt", 'w')

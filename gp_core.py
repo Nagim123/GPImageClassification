@@ -1,12 +1,12 @@
 import numpy as np
 
-import deap_fix
+import gp_patch.deap_fix as deap_fix
 import gp_operators as ops
 import copy
 
 from tqdm import tqdm
-from gp_dataset import GPDataset
-from gp_tree import GPTree
+from gp_structures.gp_dataset import GPDataset
+from gp_structures.gp_tree import GPTree
 import random
 from deap import gp, base
 from gp_terminals.gp_cutshape import GPCutshape

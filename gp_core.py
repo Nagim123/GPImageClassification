@@ -60,7 +60,7 @@ class GPImageClassifier:
         self.crossover_rate = crossover_rate
         self.elitism = elitism
         self.n_procceses = n_processes
-
+        self.sport_mode = sport_mode
         
         self.pset = generate_pset()
         self.toolbox = Toolbox()
@@ -160,7 +160,7 @@ class GPImageClassifier:
         
         children = []
         children += list(cxOnePoint(deepcopy(parent1.tree), deepcopy(parent2.tree)))
-        children += list(cxOnePointLeafBiased(deepcopy(parent1.tree), deepcopy(parent2.tree), self.crossover_rate))
+        # children += list(cxOnePointLeafBiased(deepcopy(parent1.tree), deepcopy(parent2.tree), self.crossover_rate))
         return [GPTree(self.pset, tree=tree) for tree in children]
 
     def _selection(self) -> None:

@@ -27,12 +27,6 @@ def generate_pset() -> gp.PrimitiveSetTyped:
     # Additional info
     shape_names = ["rec", "col", "row", "elp"]
 
-    # pset.context["Filter"] = GPFilter
-    # pset.context["Shape"] = GPCutshape
-    # pset.context["Point"] = GPPercentage
-    # pset.context["Size"] = GPPercentageSize
-    # pset.context["Constant"] = np.float64
-
     # Terminal set
     # Generate random kernel filter with values in [-3, 3]
     pset.addEphemeralConstant("Filter", lambda: GPFilter(np.random.randint(-3, 3, size=(3, 3))), GPFilter)

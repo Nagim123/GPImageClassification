@@ -8,6 +8,7 @@ class GPForest:
         self.pairs.sort(key=lambda x: x[0].score)
         self.forest = [p[0] for p in self.pairs]
         self.classes = [p[1] for p in self.pairs]
+        self.classes.append(classes[-1])
 
     def predict(self, image: GPImage) -> str:
         for i, tree in enumerate(self.forest):

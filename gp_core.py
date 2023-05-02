@@ -128,7 +128,7 @@ class GPImageClassifier:
         # Perform selection
         self._selection()
         # Save current best tree
-        save_gp_tree(self.population[0])
+        save_gp_tree(self.population[0], self.dataset.classes[self.cur_pos_class])
 
     def _mutation(self, individual: GPTree) -> list[GPTree]:
         """

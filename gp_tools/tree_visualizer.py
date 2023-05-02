@@ -92,16 +92,26 @@ class GPTreeVisualizer:
                 node.dim = f"{shape[0]}x{shape[1]}"
                 node.image = True
                 node.content = f"./tmp/{self.index}.png"
-                plt.imsave(
-                    f"../outputs/tmp/{self.index}.png",
-                    node.result.pixel_data,
-                    cmap="gray",
-                )
+                if shape == (1, 1) and .99 < node.result.pixel_data[0, 0] < 1.01:
+                    plt.imsave(
+                        f"../outputs/tmp/{self.index}.png",
+                        node.result.pixel_data,
+                        cmap="gray",
+                        vmin=0.0,
+                        vmax=1.0
+                    )
+                else:
+                    plt.imsave(
+                        f"../outputs/tmp/{self.index}.png",
+                        node.result.pixel_data,
+                        cmap="gray"
+                    )
                 self.index += 1
 
             elif (
                 "GP" not in node.content
                 and not node.image
+                and not node.content.isdigit()
                 and not node.content[1:].isdigit()
             ):
                 node.content += "\n" + str(node.result)
@@ -146,7 +156,7 @@ class GPTreeVisualizer:
         content = content[left + 1 : right] if left != -1 else content
 
         # If the node is a number
-        if content[1:].isdigit():
+        if content[1:].isdigit() or content.isdigit():
             node.content = content
 
         # If the node is a filter

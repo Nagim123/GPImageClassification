@@ -8,7 +8,7 @@ class GPDataset:
     Custom dataset container.
     """
     
-    def __init__(self, path: str, size_transform: tuple[int, int]) -> None:
+    def __init__(self, path: str, size_transform: tuple[int, int], image_number_per_class=0) -> None:
         """
         Create a dataset.
         
@@ -24,11 +24,13 @@ class GPDataset:
         
         self.classes = []
         for label in os.listdir(path):
-            for image_name in os.listdir(path + '/' + label):
+            for i, image_name in enumerate(os.listdir(path + '/' + label)):
                 img = np.array(Image.open(os.path.join(path + '/' + label, image_name)).convert('L'))
                 if img is not None:
                     img = GPImage(img)
                     self.images.append((img, label))
+                if i >= image_number_per_class != 0:
+                    break
             self.classes.append(label)
         self.n_classes = len(self.classes)
 

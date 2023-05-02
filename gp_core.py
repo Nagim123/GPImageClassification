@@ -86,6 +86,7 @@ class GPImageClassifier:
         forest = []
 
         for i in range(dataset.n_classes - 1):
+            print(f'Findings of model for class-"{dataset.classes[i]}" recognition')
             self.cur_pos_class = i
 
             # Generate population

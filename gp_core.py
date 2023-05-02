@@ -112,6 +112,7 @@ class GPImageClassifier:
             forest.append(self.population[0])
 
         self.forest = GPForest(forest, dataset.classes)
+        self.forest.save_forest("last")
 
     def _evolve(self) -> None:
         """

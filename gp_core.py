@@ -3,7 +3,7 @@ import gp_patch.deap_fix as deap_fix
 
 from tqdm import tqdm
 from copy import deepcopy
-from deap.gp import mutUniform, cxOnePoint, cxOnePointLeafBiased
+from deap.gp import mutUniform, cxOnePoint, cxOnePointLeafBiased, mutEphemeral, mutInsert, mutNodeReplacement, mutShrink
 from deap.base import Toolbox
 from gp_parallel import parallel_fitness
 
@@ -146,10 +146,10 @@ class GPImageClassifier:
         """
 
         mutated_individuals = [
-            # GPTree(self.pset, tree=gp.mutEphemeral(deepcopy(individual.tree), "one")[0]),
-            # GPTree(self.pset, tree=gp.mutNodeReplacement(deepcopy(individual.tree), self.pset)[0]),
-            # GPTree(self.pset, tree=gp.mutInsert(deepcopy(individual.tree), self.pset)[0]),
-            # GPTree(self.pset, tree=gp.mutShrink(deepcopy(individual.tree))[0]),
+            GPTree(self.pset, tree=mutEphemeral(deepcopy(individual.tree), "one")[0]),
+            GPTree(self.pset, tree=mutNodeReplacement(deepcopy(individual.tree), self.pset)[0]),
+            GPTree(self.pset, tree=mutInsert(deepcopy(individual.tree), self.pset)[0]),
+            GPTree(self.pset, tree=mutShrink(deepcopy(individual.tree))[0]),
             GPTree(self.pset, tree=mutUniform(deepcopy(individual.tree), self.toolbox.expr, self.pset)[0])
         ]
 
@@ -173,7 +173,7 @@ class GPImageClassifier:
 
         children = []
         children += list(cxOnePoint(deepcopy(parent1.tree), deepcopy(parent2.tree)))
-        # children += list(cxOnePointLeafBiased(deepcopy(parent1.tree), deepcopy(parent2.tree), self.crossover_rate))
+        children += list(cxOnePointLeafBiased(deepcopy(parent1.tree), deepcopy(parent2.tree), self.crossover_rate))
         return [GPTree(self.pset, tree=tree) for tree in children]
 
     def _selection(self) -> None:

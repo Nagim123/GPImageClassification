@@ -8,7 +8,7 @@ class GPDataset:
     Custom dataset container.
     """
     
-    def __init__(self, path: str, size_transform: tuple[int, int], image_number_per_class=0) -> None:
+    def __init__(self, path: str, image_number_per_class=0) -> None:
         """
         Create a dataset.
         
@@ -20,7 +20,6 @@ class GPDataset:
             Transformations to apply to each image.
         """
         self.images = []
-        self.size = size_transform
         
         self.classes = []
         for label in os.listdir(path):

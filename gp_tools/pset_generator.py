@@ -11,27 +11,21 @@ from gp_terminals.gp_percentage_size import GPPercentageSize
 def generate_pset() -> gp.PrimitiveSetTyped:
     
     # Tree definition.
-    pset = gp.PrimitiveSetTyped("MainTree", [GPImage], float)
+    pset = gp.PrimitiveSetTyped("MainTree", [GPImage], np.float64)
     # Function set
-    pset.addPrimitive(ops.add, [float, float], float)
-    pset.addPrimitive(ops.sub, [float, float], float)
-    pset.addPrimitive(ops.mul, [float, float], float)
-    pset.addPrimitive(ops.div, [float, float], float)
-    pset.addPrimitive(ops.agg_mean, [GPImage, GPPercentage, GPPercentageSize, GPCutshape], float)
-    pset.addPrimitive(ops.agg_stdev, [GPImage, GPPercentage, GPPercentageSize, GPCutshape], float)
-    pset.addPrimitive(ops.agg_max, [GPImage, GPPercentage, GPPercentageSize, GPCutshape], float)
-    pset.addPrimitive(ops.agg_min, [GPImage, GPPercentage, GPPercentageSize, GPCutshape], float)
+    pset.addPrimitive(ops.add, [np.float64, np.float64], np.float64)
+    pset.addPrimitive(ops.sub, [np.float64, np.float64], np.float64)
+    pset.addPrimitive(ops.mul, [np.float64, np.float64], np.float64)
+    pset.addPrimitive(ops.div, [np.float64, np.float64], np.float64)
+    pset.addPrimitive(ops.agg_mean, [GPImage, GPPercentage, GPPercentageSize, GPCutshape], np.float64)
+    pset.addPrimitive(ops.agg_stdev, [GPImage, GPPercentage, GPPercentageSize, GPCutshape], np.float64)
+    pset.addPrimitive(ops.agg_max, [GPImage, GPPercentage, GPPercentageSize, GPCutshape], np.float64)
+    pset.addPrimitive(ops.agg_min, [GPImage, GPPercentage, GPPercentageSize, GPCutshape], np.float64)
     pset.addPrimitive(ops.conv, [GPImage, GPFilter], GPImage)
     pset.addPrimitive(ops.pool, [GPImage], GPImage)
 
     # Additional info
     shape_names = ["rec", "col", "row", "elp"]
-
-    pset.context["Filter"] = GPFilter
-    pset.context["Shape"] = GPCutshape
-    pset.context["Point"] = GPPercentage
-    pset.context["Size"] = GPPercentageSize
-    pset.context["Constant"] = float
 
     # Terminal set
     # Generate random kernel filter with values in [-3, 3]
@@ -39,7 +33,7 @@ def generate_pset() -> gp.PrimitiveSetTyped:
     pset.addEphemeralConstant("Shape", lambda: GPCutshape(shape_names[np.random.randint(0, len(shape_names))]),
                                 GPCutshape)
 
-    pset.addEphemeralConstant("Constant", lambda: np.random.randint(-5, 5), float)
+    pset.addEphemeralConstant("Constant", lambda: np.random.randint(-5, 5), np.float64)
 
     pset.addEphemeralConstant("Point", lambda: GPPercentage(
         np.random.uniform(low=0.05, high=0.9),

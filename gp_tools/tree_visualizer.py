@@ -12,8 +12,15 @@ from gp_tools.tree_runner import run_tree
 
 
 class Node:
+    """
+    The class represents a node of a tree (GP chromosome) in a format
+    that is used to draw the tree
+    """
+    def __init__(self, parent: "Node"):
+        """
+        @param parent: The parent node of the current node
+        """
 
-    def __init__(self, parent):
         self.content = None
         self.parent = parent
         self.children = []
@@ -22,7 +29,13 @@ class Node:
         self.dim = ""
 
 
-def draw_array(data, name):
+def draw_array(data, name: str) -> None:
+    """
+    Draws an array-like object as a table. Saves it with the name 'name' to outputs
+
+    @param data: array-like object to draw
+    @param name: the name of the file to save the picture
+    """
     fig, ax = plt.subplots()
     ax.axis("off")
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
@@ -32,10 +45,21 @@ def draw_array(data, name):
 
 
 class GPTreeVisualizer:
+    """
+    The class is used to plot the tree and its decisions as a picture
+    """
     def __init__(self, tree: str):
+        """
+        @param tree: the tree to draw. Represented by a set of nested parentheses
+        """
         self.tree = tree
 
-    def __call__(self, image: GPImage):
+    def __call__(self, image: GPImage) -> None:
+        """
+        The method draws the tree and its decisions on a given image
+
+        @param image: the given image
+        """
         self.image = image
 
         sys.setrecursionlimit(10000000)
@@ -53,7 +77,11 @@ class GPTreeVisualizer:
 
         shutil.rmtree("../outputs/tmp")
 
-    def visualize_tree(self):
+    def visualize_tree(self) -> None:
+        """
+        The core of tree visualization. Prepares the string that graphviz
+        will take as an input. Renders the image using graphviz
+        """
         self.tree_parse(self.tree, Node(None))
 
         for node in self.nodes[::-1]:
@@ -66,6 +94,7 @@ class GPTreeVisualizer:
                     f"../outputs/tmp/{self.index}.png", node.result.pixel_data, cmap="gray"
                 )
                 self.index += 1
+
             elif (
                     "GP" not in node.content
                     and not node.image
@@ -86,22 +115,35 @@ class GPTreeVisualizer:
 
             if node.parent:
                 dot += "node{} -> node{};\n".format(id(node.parent), id(node))
+
         dot += "}"
 
         graph = graphviz.Source(dot)
         graph.render("tree", "../outputs/")
 
     def tree_parse(self, content: str, node: "Node"):
+        """
+        Recursively parses the tree by nodes
+
+        @param content: the content of the node and its subtree
+        @param node: the current node
+        """
         left = content.find("(")
         right = content.rfind(")")
         self.nodes.append(node)
+
+        # Get the result of the node's subtree
         node.result = run_tree(self.image, content)
+
+        # Split the node's content to arguments and action
         node.content = content[:left] if left != -1 else content
         content = content[left + 1: right] if left != -1 else content
 
+        # If the node is a number
         if content[1:].isdigit():
             node.content = content
 
+        # If the node is a filter
         elif node.content == "GPFilter":
             table = ast.literal_eval(content.replace("np.array(", "").replace(")", ""))
             name = f"./tmp/{self.index}.png"
@@ -110,6 +152,7 @@ class GPTreeVisualizer:
             node.image = True
             self.index += 1
 
+        # If the node is a GPPercentage or GPPercentageSize object
         elif "GPPercent" in node.content:
             x, y = ast.literal_eval(content)
             x, y = round(x, 3), round(y, 3)
@@ -117,17 +160,21 @@ class GPTreeVisualizer:
             length = len(node.content)
             node.content = node.content[: length // 2] + "\n" + node.content[length // 2:]
 
+        # If the node is another object starting with GP
         elif "GP" in node.content:
             node.content = f"{node.content}({content})"
 
+        # If the node is the input image
         elif node.content == "ARG0":
             node.content = self.im_path
             node.image = True
 
+        # If the node is not terminal
         else:
             parentheses, start = 0, 0
             children = []
 
+            # Parse arguments
             for i in range(len(content)):
                 if not parentheses and content[i] == ",":
                     children.append(content[start:i])
@@ -141,6 +188,7 @@ class GPTreeVisualizer:
 
             children.append(content[start:])
 
+            # Run recursively for all arguments
             for child in children:
                 child_node = Node(node)
                 node.children.append(child_node)

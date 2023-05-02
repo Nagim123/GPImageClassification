@@ -8,10 +8,12 @@ from deap.base import Toolbox
 from gp_parallel import parallel_fitness
 
 from gp_structures.gp_dataset import GPDataset
+from gp_structures.gp_forest import GPForest
 from gp_structures.gp_tree import GPTree
 from gp_utils.gp_saver import save_gp_tree
 from gp_tools.pset_generator import generate_pset
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score
+
 
 class GPImageClassifier:
     """
@@ -27,8 +29,9 @@ class GPImageClassifier:
                  mutation_rate: float = 0.2,
                  crossover_rate: float = 0.5,
                  elitism: int = 10,
-                 n_processes = 4,
-                 sport_mode = True
+                 n_processes=4,
+                 sport_mode=True,
+                 metric=accuracy_score
                  ) -> None:
         """
         Initialize Genetic Programming algorithm.
@@ -59,13 +62,14 @@ class GPImageClassifier:
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
         self.elitism = elitism
-        self.n_procceses = n_processes
+        self.n_processes = n_processes
         self.sport_mode = sport_mode
-        
+
         self.pset = generate_pset()
         self.toolbox = Toolbox()
         self.toolbox.register("expr", deap_fix.genFull, pset=self.pset, min_=1, max_=3)
-        self.metric = accuracy_score
+        self.metric = metric
+        self.cur_pos_class = 0
 
     def fit(self, dataset: GPDataset) -> None:
         """
@@ -76,27 +80,35 @@ class GPImageClassifier:
         dataset: GPDataset
             Dataset that will be used by classifier.
         """
-        
-        # Generate populatiom
-        self.population = [
-            GPTree(self.pset, self.min_tree_depth, self.max_tree_depth)
-            for _ in range(self.population_size)
-        ]
 
         # Store dataset
         self.dataset = dataset
+        forest = []
 
-        if self.sport_mode:
-            fitness_values = parallel_fitness(self._fitness, self.population, self.n_procceses)
-            self.population = [t[0] for t in fitness_values]
-            for i in range(self.population_size):
-                self.population[i].score = fitness_values[i][1]
+        for i in range(dataset.n_classes - 1):
+            self.cur_pos_class = i
 
-        # Start genetic loop
-        bar = tqdm(range(self.generations))
-        for _ in bar:
-            self._evolve()
-            bar.set_postfix({"best:": self.evaluate(self.get_best(), dataset, self.metric)})
+            # Generate population
+            self.population = [
+                GPTree(self.pset, self.min_tree_depth, self.max_tree_depth)
+                for _ in range(self.population_size)
+            ]
+
+            if self.sport_mode:
+                fitness_values = parallel_fitness(self._fitness, self.population, self.n_processes)
+                self.population = [t[0] for t in fitness_values]
+                for i in range(self.population_size):
+                    self.population[i].score = fitness_values[i][1]
+
+            # Start genetic loop
+            bar = tqdm(range(self.generations))
+            for _ in bar:
+                self._evolve()
+                bar.set_postfix({"best:": self._evaluate_tree(self.population[0])})
+
+            forest.append(self.population[0])
+
+        self.forest = GPForest(forest, dataset.classes)
 
     def _evolve(self) -> None:
         """
@@ -108,7 +120,7 @@ class GPImageClassifier:
             # Mutation
             if random.uniform(0, 1) < self.mutation_rate:
                 self.population += self._mutation(individual)
-            
+
             # Crossover
             if random.uniform(0, 1) < self.crossover_rate:
                 parent1, parent2 = random.sample(old_population, 2)
@@ -116,7 +128,7 @@ class GPImageClassifier:
         # Perform selection
         self._selection()
         # Save current best tree
-        save_gp_tree(self.get_best())
+        save_gp_tree(self.population[0])
 
     def _mutation(self, individual: GPTree) -> list[GPTree]:
         """
@@ -131,15 +143,15 @@ class GPImageClassifier:
         -------
         list[GPTree]: Mutated individuals from different mutation operations.
         """
-        
+
         mutated_individuals = [
-            #GPTree(self.pset, tree=gp.mutEphemeral(deepcopy(individual.tree), "one")[0]),
-            #GPTree(self.pset, tree=gp.mutNodeReplacement(deepcopy(individual.tree), self.pset)[0]),
-            #GPTree(self.pset, tree=gp.mutInsert(deepcopy(individual.tree), self.pset)[0]),
-            #GPTree(self.pset, tree=gp.mutShrink(deepcopy(individual.tree))[0]),
+            # GPTree(self.pset, tree=gp.mutEphemeral(deepcopy(individual.tree), "one")[0]),
+            # GPTree(self.pset, tree=gp.mutNodeReplacement(deepcopy(individual.tree), self.pset)[0]),
+            # GPTree(self.pset, tree=gp.mutInsert(deepcopy(individual.tree), self.pset)[0]),
+            # GPTree(self.pset, tree=gp.mutShrink(deepcopy(individual.tree))[0]),
             GPTree(self.pset, tree=mutUniform(deepcopy(individual.tree), self.toolbox.expr, self.pset)[0])
         ]
-        
+
         return mutated_individuals
 
     def _crossover(self, parent1: GPTree, parent2: GPTree) -> list[GPTree]:
@@ -157,7 +169,7 @@ class GPImageClassifier:
         -------
         list[GPTree]: Children from different crossover operations.
         """
-        
+
         children = []
         children += list(cxOnePoint(deepcopy(parent1.tree), deepcopy(parent2.tree)))
         # children += list(cxOnePointLeafBiased(deepcopy(parent1.tree), deepcopy(parent2.tree), self.crossover_rate))
@@ -165,23 +177,22 @@ class GPImageClassifier:
 
     def _selection(self) -> None:
         """
-        Selection of best individuals and removing the worst ones.
+        Selection of the best individuals and removing the worst ones.
         """
 
         if not self.sport_mode:
-            fitness_values = parallel_fitness(self._fitness, self.population, self.n_procceses)
-            fitness_values.sort(key= lambda t: -t[1])
+            fitness_values = parallel_fitness(self._fitness, self.population, self.n_processes)
+            fitness_values.sort(key=lambda t: -t[1])
             fitness_values = fitness_values[:self.population_size]
             self.population = [t[0] for t in fitness_values]
         else:
             fitness_values = [(self.population[i], self.population[i].score) for i in range(self.population_size)]
-            fitness_values += parallel_fitness(self._fitness, self.population[self.population_size:], self.n_procceses)
-            fitness_values.sort(key= lambda t: -t[1])
+            fitness_values += parallel_fitness(self._fitness, self.population[self.population_size:], self.n_processes)
+            fitness_values.sort(key=lambda t: -t[1])
             fitness_values = fitness_values[:self.population_size]
             self.population = [t[0] for t in fitness_values]
             for i in range(self.population_size):
                 self.population[i].score = fitness_values[i][1]
-
 
     def _fitness(self, individual: GPTree) -> float:
         """
@@ -196,9 +207,9 @@ class GPImageClassifier:
         -------
         float: The fitness value.
         """
-        return self.evaluate(individual, self.dataset, self.metric)
+        return self._evaluate_tree(individual)
 
-    def evaluate(self, gptree: GPTree, dataset: GPDataset, metric) -> float:
+    def _evaluate_tree(self, tree: GPTree) -> float:
         """
         Evaluate specific tree on dataset by specified metric.
 
@@ -216,20 +227,19 @@ class GPImageClassifier:
 
         predictions = []
         true_values = []
+        for x in self.dataset:
+            pred = tree.predict(x[0])
+            predictions.append(self.dataset.classes[self.cur_pos_class] if pred > 0.5 else '*')
+            true_values.append(x[1] if self.dataset.classes[self.cur_pos_class] == x[1] else '*')
+
+        return f1_score(true_values, predictions, pos_label=self.dataset.classes[self.cur_pos_class])
+
+    def evaluate_forest(self, dataset: GPDataset, metric):
+        predictions = []
+        true_values = []
         for x in dataset:
-            pred = gptree.predict(x[0])
-            predictions.append(dataset.classes[1] if pred > 0.5 else dataset.classes[0])
+            predictions.append(self.forest.predict(x[0]))
             true_values.append(x[1])
-        
+
         return metric(true_values, predictions)
 
-    def get_best(self) -> GPTree:
-        """
-        Return best individual.
-
-        Returns
-        -------
-        GPTree: Tree with highest fitness value.
-        """
-
-        return self.population[0]

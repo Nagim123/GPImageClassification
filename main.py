@@ -1,14 +1,19 @@
 from gp_core import GPImageClassifier
 from gp_structures.gp_dataset import GPDataset
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score
+
+
+def f1_score_multi(true, pred):
+    return f1_score(true, pred, average='macro')
 
 def main():
-    train_dataset = GPDataset("faces/train", (19, 19))
-    test_dataset = GPDataset("faces/test", (19, 19))
-    gp = GPImageClassifier(population_size=100, generations=15, n_processes=6)
+    train_dataset = GPDataset("dataset/train", (20, 20))
+    test_dataset = GPDataset("dataset/test", (20, 20))
+    gp = GPImageClassifier(population_size=40, generations=15, n_processes=4)
     gp.fit(train_dataset)
 
-    print(gp.evaluate(gp.get_best(), test_dataset, accuracy_score))
+    print(gp.evaluate_forest(test_dataset, f1_score_multi))
+
 
 if __name__ == "__main__":
     main()

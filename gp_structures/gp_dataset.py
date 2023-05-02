@@ -30,6 +30,7 @@ class GPDataset:
                     img = GPImage(img)
                     self.images.append((img, label))
             self.classes.append(label)
+        self.n_classes = len(self.classes)
 
     def __getitem__(self, item) -> tuple[GPImage, str]:
         return self.images[item]

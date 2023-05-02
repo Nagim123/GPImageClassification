@@ -16,6 +16,11 @@ from gp_terminals.gp_percentage_size import GPPercentageSize
 from gp_utils.gp_point import GPPoint
 from gp_utils.gp_size import GPSize
 
+import warnings
+
+#suppress warnings
+warnings.filterwarnings('ignore')
+
 # ========================
 # Classification operators.
 # ========================

@@ -7,9 +7,9 @@ def f1_score_multi(true, pred):
     return f1_score(true, pred, average='macro')
 
 def main():
-    train_dataset = GPDataset("mnist/train", (20, 20), 150)
-    test_dataset = GPDataset("mnist/test", (20, 20))
-    gp = GPImageClassifier(population_size=55, generations=15, n_processes=4)
+    train_dataset = GPDataset("faces/train", (20, 20), 300)
+    test_dataset = GPDataset("faces/test", (20, 20))
+    gp = GPImageClassifier(population_size=60, generations=15, n_processes=6)
     gp.fit(train_dataset)
 
     print(gp.evaluate_forest(test_dataset, f1_score_multi))

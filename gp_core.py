@@ -10,9 +10,8 @@ from gp_parallel import parallel_fitness
 from gp_structures.gp_dataset import GPDataset
 from gp_structures.gp_forest import GPForest
 from gp_structures.gp_tree import GPTree
-from gp_utils.gp_saver import save_gp_tree
 from gp_tools.pset_generator import generate_pset
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import f1_score
 
 
 class GPImageClassifier:
@@ -25,13 +24,10 @@ class GPImageClassifier:
                  generations: int = 50,
                  min_tree_depth: int = 2,
                  max_tree_depth: int = 10,
-                 tournament_size: int = 7,
                  mutation_rate: float = 0.2,
                  crossover_rate: float = 0.5,
-                 elitism: int = 10,
                  n_processes=4,
-                 sport_mode=True,
-                 metric=accuracy_score
+                 save_score=True
                  ) -> None:
         """
         Initialize Genetic Programming algorithm.
@@ -50,25 +46,31 @@ class GPImageClassifier:
         max_tree_size: int
             Maximum depth of generated trees.
 
-        tournament_size: int
-            ???.    
+        mutation_rate: float
+            Probability of mutation.
+
+        crossover_rate: float
+            Probability of crossover.
+
+        n_processes: int
+            Number of processes to spawn for parallel fitness computation.
+
+        save_score: bool
+            If true then saves fitness score of each individual for optimization purposes.
         """
 
         self.population_size = population_size
         self.generations = generations
         self.min_tree_depth = min_tree_depth
         self.max_tree_depth = max_tree_depth
-        self.tournament_size = tournament_size
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
-        self.elitism = elitism
         self.n_processes = n_processes
-        self.sport_mode = sport_mode
+        self.save_score = save_score
 
         self.pset = generate_pset()
         self.toolbox = Toolbox()
         self.toolbox.register("expr", deap_fix.genFull, pset=self.pset, min_=1, max_=3)
-        self.metric = metric
         self.cur_pos_class = 0
 
     def fit(self, dataset: GPDataset) -> None:
@@ -95,7 +97,7 @@ class GPImageClassifier:
                 for _ in range(self.population_size)
             ]
 
-            if self.sport_mode:
+            if self.save_score:
                 fitness_values = parallel_fitness(self._fitness, self.population, self.n_processes)
                 self.population = [t[0] for t in fitness_values]
                 for i in range(self.population_size):
@@ -128,8 +130,6 @@ class GPImageClassifier:
                 self.population += self._crossover(parent1, parent2)
         # Perform selection
         self._selection()
-        # Save current best tree
-        save_gp_tree(self.population[0], self.dataset.classes[self.cur_pos_class])
 
     def _mutation(self, individual: GPTree) -> list[GPTree]:
         """
@@ -181,7 +181,7 @@ class GPImageClassifier:
         Selection of the best individuals and removing the worst ones.
         """
 
-        if not self.sport_mode:
+        if not self.save_score:
             fitness_values = parallel_fitness(self._fitness, self.population, self.n_processes)
             fitness_values.sort(key=lambda t: -t[1])
             fitness_values = fitness_values[:self.population_size]
@@ -235,12 +235,12 @@ class GPImageClassifier:
 
         return f1_score(true_values, predictions, pos_label=self.dataset.classes[self.cur_pos_class])
 
-    def evaluate_forest(self, dataset: GPDataset, metric):
+    def evaluate_forest(self, dataset: GPDataset):
         predictions = []
         true_values = []
         for x in dataset:
             predictions.append(self.forest.predict(x[0]))
             true_values.append(x[1])
 
-        return metric(true_values, predictions)
+        return f1_score(true_values, predictions, average='macro')
 

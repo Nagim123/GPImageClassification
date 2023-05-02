@@ -16,6 +16,7 @@ class Node:
     The class represents a node of a tree (GP chromosome) in a format
     that is used to draw the tree
     """
+
     def __init__(self, parent: "Node"):
         """
         @param parent: The parent node of the current node
@@ -48,6 +49,7 @@ class GPTreeVisualizer:
     """
     The class is used to plot the tree and its decisions as a picture
     """
+
     def __init__(self, tree: str):
         """
         @param tree: the tree to draw. Represented by a set of nested parentheses
@@ -67,8 +69,8 @@ class GPTreeVisualizer:
             shutil.rmtree("../outputs/tmp")
         os.mkdir("../outputs/tmp")
 
-        self.im_path = '../outputs/tmp/0.png'
-        plt.imsave(self.im_path, self.image.pixel_data, cmap='gray')
+        self.im_path = "../outputs/tmp/0.png"
+        plt.imsave(self.im_path, self.image.pixel_data, cmap="gray")
 
         self.index = 1
         self.nodes = []
@@ -91,14 +93,16 @@ class GPTreeVisualizer:
                 node.image = True
                 node.content = f"./tmp/{self.index}.png"
                 plt.imsave(
-                    f"../outputs/tmp/{self.index}.png", node.result.pixel_data, cmap="gray"
+                    f"../outputs/tmp/{self.index}.png",
+                    node.result.pixel_data,
+                    cmap="gray",
                 )
                 self.index += 1
 
             elif (
-                    "GP" not in node.content
-                    and not node.image
-                    and not node.content[1:].isdigit()
+                "GP" not in node.content
+                and not node.image
+                and not node.content[1:].isdigit()
             ):
                 node.content += "\n" + str(node.result)
 
@@ -106,8 +110,10 @@ class GPTreeVisualizer:
 
         for node in self.nodes:
             if node.image:
-                dot += 'node{} [label="{}" fontcolor=blue image="{}" shape=rectangle width=1 height=1 ' \
-                       'imagescale=true];\n'.format(id(node), node.dim, node.content)
+                dot += (
+                    'node{} [label="{}" fontcolor=blue image="{}" shape=rectangle width=1 height=1 '
+                    "imagescale=true];\n".format(id(node), node.dim, node.content)
+                )
             else:
                 dot += 'node{} [label="{}" shape=circle style=filled color=lightblue width=1];\n'.format(
                     id(node), node.content
@@ -137,7 +143,7 @@ class GPTreeVisualizer:
 
         # Split the node's content to arguments and action
         node.content = content[:left] if left != -1 else content
-        content = content[left + 1: right] if left != -1 else content
+        content = content[left + 1 : right] if left != -1 else content
 
         # If the node is a number
         if content[1:].isdigit():
@@ -158,7 +164,9 @@ class GPTreeVisualizer:
             x, y = round(x, 3), round(y, 3)
             node.content = f"{node.content}({x}, {y})"
             length = len(node.content)
-            node.content = node.content[: length // 2] + "\n" + node.content[length // 2:]
+            node.content = (
+                node.content[: length // 2] + "\n" + node.content[length // 2 :]
+            )
 
         # If the node is another object starting with GP
         elif "GP" in node.content:
@@ -200,7 +208,7 @@ drawer = GPTreeVisualizer(tree_str)
 
 parser = argparse.ArgumentParser(description="Visualize the tree on the example image")
 
-parser.add_argument('path', type=str, help='Path to file for visualizing')
+parser.add_argument("path", type=str, help="Path to file for visualizing")
 
 args = parser.parse_args()
 path_to_file = args.path

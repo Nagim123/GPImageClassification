@@ -43,3 +43,6 @@ if __name__ == "__main__":
 python gp_test.py <name-of-classifier> <path-to-single-image>
 ```
 The last trained classifier is called "last". Output of command is name of class.
+
+### Reference
+The code is based on https://ieeexplore.ieee.org/abstract/document/8477933 with some modifications.

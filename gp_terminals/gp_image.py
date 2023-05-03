@@ -1,7 +1,7 @@
 import numpy as np
 from gp_utils.gp_size import GPSize
 from gp_terminals.gp_filter import GPFilter
-from autograd.scipy import signal
+from scipy import signal
 
 class GPImage:
     """
@@ -25,7 +25,7 @@ class GPImage:
         """
         Apply kernel filter to image by convolution process.
         """
-        return GPImage(signal.convolve(self.pixel_data, filter.filter_data, mode='valid'))
+        return GPImage(signal.convolve(self.pixel_data, filter.filter_data, mode='same'))
     
     def apply_maxpool2x2(self) -> object:
         """

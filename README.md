@@ -29,6 +29,7 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+Result of training will be saved in outputs folder.
 ### Parameters of GPImageClassifier
 * population_size - The size of population
 * generations - Number of generations

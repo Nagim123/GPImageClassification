@@ -123,7 +123,7 @@ class GPTreeVisualizer:
         for node in self.nodes:
             if node.image:
                 dot += (
-                    'node{} [label="{}" fontcolor=blue image="{}" shape=rectangle width=1 height=1 '
+                    'node{} [label="{}" fontcolor=red image="{}" shape=rectangle width=1 height=1 '
                     "imagescale=true];\n".format(id(node), node.dim, node.content)
                 )
             else:

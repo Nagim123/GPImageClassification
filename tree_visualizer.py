@@ -6,6 +6,8 @@ import sys
 
 import graphviz
 import matplotlib.pyplot as plt
+from PIL import Image
+import numpy as np
 
 from gp_terminals.gp_image import GPImage
 from gp_tools.tree_runner import run_tree
@@ -42,7 +44,7 @@ def draw_array(data, name: str) -> None:
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
     table = ax.table(cellText=data, loc="center", bbox=(0, 0, 1, 1), cellLoc="center")
     table.set_fontsize(40)
-    plt.savefig(f"../outputs/{name}", dpi=20)
+    plt.savefig(f"outputs/{name}", dpi=20)
 
 
 class GPTreeVisualizer:
@@ -65,11 +67,11 @@ class GPTreeVisualizer:
         self.image = image
 
         sys.setrecursionlimit(10000000)
-        if os.path.exists("../outputs/tmp"):
-            shutil.rmtree("../outputs/tmp")
-        os.mkdir("../outputs/tmp")
+        if os.path.exists("outputs/tmp"):
+            shutil.rmtree("outputs/tmp")
+        os.mkdir("outputs/tmp")
 
-        self.im_path = "../outputs/tmp/0.png"
+        self.im_path = "outputs/tmp/0.png"
         plt.imsave(self.im_path, self.image.pixel_data, cmap="gray")
 
         self.index = 1
@@ -77,7 +79,7 @@ class GPTreeVisualizer:
 
         self.visualize_tree()
 
-        shutil.rmtree("../outputs/tmp")
+        shutil.rmtree("outputs/tmp")
 
     def visualize_tree(self) -> None:
         """
@@ -94,7 +96,7 @@ class GPTreeVisualizer:
                 node.content = f"./tmp/{self.index}.png"
                 if shape == (1, 1) and .99 < node.result.pixel_data[0, 0] < 1.01:
                     plt.imsave(
-                        f"../outputs/tmp/{self.index}.png",
+                        f"outputs/tmp/{self.index}.png",
                         node.result.pixel_data,
                         cmap="gray",
                         vmin=0.0,
@@ -102,8 +104,8 @@ class GPTreeVisualizer:
                     )
                 else:
                     plt.imsave(
-                        f"../outputs/tmp/{self.index}.png",
-                        node.result.pixel_data,
+                        f"outputs/tmp/{self.index}.png",
+                        np.interp(node.result.pixel_data, (node.result.pixel_data.min(), node.result.pixel_data.max()), (0, 1)),
                         cmap="gray"
                     )
                 self.index += 1
@@ -135,7 +137,7 @@ class GPTreeVisualizer:
         dot += "}"
 
         graph = graphviz.Source(dot)
-        graph.render("tree", "../outputs/")
+        graph.render("tree", "outputs/")
 
     def tree_parse(self, content: str, node: "Node"):
         """
@@ -213,7 +215,7 @@ class GPTreeVisualizer:
                 self.tree_parse(child, child_node)
 
 
-tree_str = open("../outputs/best_result_tree.txt", "r").readline()
+tree_str = open("outputs/best_result_tree.txt", "r").readline()
 drawer = GPTreeVisualizer(tree_str)
 
 parser = argparse.ArgumentParser(description="Visualize the tree on the example image")
@@ -222,6 +224,6 @@ parser.add_argument("path", type=str, help="Path to file for visualizing")
 
 args = parser.parse_args()
 path_to_file = args.path
-image = GPImage(plt.imread(path_to_file))
+image = GPImage(np.array(Image.open(path_to_file).convert('L')))
 
 drawer(image)

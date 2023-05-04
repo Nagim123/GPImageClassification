@@ -94,13 +94,14 @@ class GPTreeVisualizer:
                 node.dim = f"{shape[0]}x{shape[1]}"
                 node.image = True
                 node.content = f"./tmp/{self.index}.png"
-                if shape == (1, 1) and .99 < node.result.pixel_data[0, 0] < 1.01:
+
+                if shape == (1, 1) and 254.9 < node.result.pixel_data[0, 0] :
                     plt.imsave(
                         f"outputs/tmp/{self.index}.png",
                         node.result.pixel_data,
                         cmap="gray",
                         vmin=0.0,
-                        vmax=1.0
+                        vmax=255.0
                     )
                 else:
                     plt.imsave(
@@ -186,7 +187,7 @@ class GPTreeVisualizer:
 
         # If the node is the input image
         elif node.content == "ARG0":
-            node.content = self.im_path
+            node.content = self.im_path.replace('outputs', '.')
             node.image = True
 
         # If the node is not terminal

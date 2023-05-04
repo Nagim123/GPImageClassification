@@ -178,7 +178,7 @@ class GPTreeVisualizer:
             node.content = f"{node.content}({x}, {y})"
             length = len(node.content)
             node.content = (
-                node.content[: length // 2] + "\n" + node.content[length // 2 :]
+                node.content[: length // 2] + "\n" + node.content[length // 2:]
             )
 
         # If the node is another object starting with GP

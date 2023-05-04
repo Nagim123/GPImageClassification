@@ -1,1 +1,1 @@
-{"toydataset": {"CNN_accuracy": 1.0, "CNN_params": 92930}}
+{"toydataset": {"CNN_accuracy": 1.0, "CNN_params": 92930, "GP_accuracy": 0.96}, "jaffe": {"CNN_accuracy": 0.8, "CNN_params": 14838658}, "tumor": {"CNN_accuracy": 0.8888888955116272, "CNN_params": 43674370}}

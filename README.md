@@ -5,7 +5,7 @@
 In this project, we proposed a genetic programming based method that utilizes the tools of convolutional neural networks and evolutionary algorithms to automatically evolve a tree that will be able to classify images. With such an approach we aim to produce relatively simple, easily visualizable results that will evolve automatically without manual model creation.
 
 ## Generated tree visual example
-Picture of tree
+![Tree picture](https://raw.githubusercontent.com/Nagim123/GPImageClassification/main/outputs/tree_example.png)
 
 ## Results in comparison with CNN
 The CNN with which the comparison was made is located in the folder "training" in a root. (models are written using keras)

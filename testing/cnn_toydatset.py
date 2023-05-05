@@ -18,7 +18,7 @@ test_data = ImageDataGenerator(
 )
 
 train = train_data.flow_from_directory(
-    directory='../toydataset/train',  # Directory with the pictures
+    directory='../datasets/dataset/train',  # Directory with the pictures
     target_size=(20, 20),  # Reshape to this form
     batch_size=32,
     color_mode='grayscale',
@@ -29,7 +29,7 @@ train = train_data.flow_from_directory(
 
 # Generator for validation data
 valid = train_data.flow_from_directory(
-    directory='../toydataset/train', # Directory with the pictures
+    directory='../datasets/dataset/train', # Directory with the pictures
     target_size=(20, 20), # Reshape to this form
     batch_size=32,
     color_mode='grayscale',
@@ -40,7 +40,7 @@ valid = train_data.flow_from_directory(
 
 # Generator for test data
 test = test_data.flow_from_directory(
-    '../toydataset/test',  # Directory with the pictures
+    '../datasets/dataset/test',  # Directory with the pictures
     target_size=(20, 20), # Reshape to this form
     batch_size=32,
     color_mode='grayscale',

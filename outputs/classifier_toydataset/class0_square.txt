@@ -1,1 +1,1 @@
-sub(agg_stdev(ARG0, GPPercentage(0.5960188186440194,0.4437058433245475), GPPercentageSize(0.45339920035023096,0.4281857282243524), GPCutshape('elp')), agg_max(conv(ARG0, GPFilter(np.array([[-3, -2, 1], [0, 0, -2], [-2, -2, -1]]))), GPPercentage(0.39623249258894866,0.731362500444547), GPPercentageSize(0.6947768691936269,0.5932590908938201), GPCutshape('elp')))
+sub(5, agg_max(conv(ARG0, GPFilter(np.array([[-3, -2, 1], [0, 0, -2], [-2, -2, -1]]))), GPPercentage(0.39623249258894866,0.731362500444547), GPPercentageSize(0.6947768691936269,0.5932590908938201), GPCutshape('elp')))

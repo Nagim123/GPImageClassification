@@ -8,16 +8,6 @@ from tqdm import tqdm
 
 from testing.f1_score import F1
 
-# paths = ['C:\\Users\\user\\PycharmProjects\\GPImageClassification\\jaffe\\test\\happy',
-#          'C:\\Users\\user\\PycharmProjects\\GPImageClassification\\jaffe\\test\\sad',
-#          'C:\\Users\\user\\PycharmProjects\\GPImageClassification\\jaffe\\train\\happy',
-#          'C:\\Users\\user\\PycharmProjects\\GPImageClassification\\jaffe\\train\\sad']
-# for path in paths:
-#     for filename in tqdm(os.listdir(path)):
-#         path1 = os.path.join(path, filename)
-#         plt.imsave(path1.replace('.tiff', '.png'), plt.imread(path1))
-#         os.remove(path1)
-
 with open('results.json', 'r') as f:
     data = json.load(f)
 

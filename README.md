@@ -11,7 +11,7 @@ In this project, we proposed a genetic programming based method that utilizes th
 The CNN with which the comparison was made is located in the folder "training" in a root. (models are written using keras)
 |Dataset|GP training time (minutes)|GP F1 score (train)| GP F1 score (test)| CNN F1 score (train)|CNN F1 score (test)|CNN parameters count| GP nodes number|
 |------------------|--------------------------|-------------------|-------------------|---------------------|-------------------|---------------|----------|
-|Squares vs circles| 1                        | 1.0               | 1.0               | 1.0                 | 1.0               |92930          |9         |
+|Squares vs circles| 1                        | 1.0               | 1.0               | 1.0                 | 1.0               |92 930         |9         |
 |Brain tumor       | 120                      | 0.82              | 0.84              | 1.0                 | 0.89              |14 838 658     |22        |
 |JAFFE (modified)  | 90                       | 0.92              | 0.7               | 1.0                 | 0.8               |43 674 370     |58        |
 

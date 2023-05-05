@@ -31,7 +31,7 @@ test_data = ImageDataGenerator(
 )
 
 train = train_data.flow_from_directory(
-    directory='../jaffe/train',  # Directory with the pictures
+    directory='../datasets/jaffe/train',  # Directory with the pictures
     target_size=(256, 256),  # Reshape to this form
     batch_size=4,
     color_mode='grayscale',
@@ -42,7 +42,7 @@ train = train_data.flow_from_directory(
 
 # Generator for validation data
 valid = train_data.flow_from_directory(
-    directory='../jaffe/train', # Directory with the pictures
+    directory='../datasets/jaffe/train', # Directory with the pictures
     target_size=(256, 256), # Reshape to this form
     batch_size=4,
     color_mode='grayscale',
@@ -53,7 +53,7 @@ valid = train_data.flow_from_directory(
 
 # Generator for test data
 test = test_data.flow_from_directory(
-    '../jaffe/test',  # Directory with the pictures
+    '../datasets/jaffe/test',  # Directory with the pictures
     target_size=(256, 256), # Reshape to this form
     batch_size=4,
     color_mode='grayscale',

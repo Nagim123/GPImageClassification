@@ -1,4 +1,5 @@
 import random
+import os
 import gp_patch.deap_fix as deap_fix
 
 from tqdm import tqdm
@@ -66,6 +67,9 @@ class GPImageClassifier:
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
         self.n_processes = n_processes
+        if n_processes > 1 and not os.name == 'posix':
+            raise Exception(f"Cannot run {n_processes} processes on Windows. Use Linux please.")
+
         self.save_score = save_score
 
         self.pset = generate_pset()

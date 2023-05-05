@@ -3,6 +3,7 @@ import json
 from keras.preprocessing.image import ImageDataGenerator
 import tensorflow as tf
 
+from testing.f1_score import F1
 
 with open('results.json', 'r') as f:
     data = json.load(f)
@@ -56,15 +57,15 @@ model = tf.keras.models.Sequential([
     tf.keras.layers.Dense(2, activation='softmax')
 ])
 
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[F1()])
 model.fit(train, epochs=15, validation_data=valid)
 
-test_loss, test_acc = model.evaluate(test)
-print(f'Test accuracy: {test_acc:.4f}, Test loss: {test_loss:.4f}')
+test_loss, test_f1 = model.evaluate(test)
+print(f'Test f1: {test_f1:.4f}, Test loss: {test_loss:.4f}')
 
 if 'toydataset' not in data:
     data['toydataset'] = {}
-data['toydataset']['CNN_accuracy'] = test_acc
+data['toydataset']['CNN_accuracy'] = test_f1
 data['toydataset']['CNN_params'] = model.count_params()
 
 with open('results.json', 'w') as f:

@@ -6,6 +6,8 @@ import tensorflow as tf
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
+from testing.f1_score import F1
+
 # paths = ['C:\\Users\\user\\PycharmProjects\\GPImageClassification\\jaffe\\test\\happy',
 #          'C:\\Users\\user\\PycharmProjects\\GPImageClassification\\jaffe\\test\\sad',
 #          'C:\\Users\\user\\PycharmProjects\\GPImageClassification\\jaffe\\train\\happy',
@@ -70,15 +72,15 @@ model = tf.keras.models.Sequential([
     tf.keras.layers.Dense(2, activation='softmax')
 ])
 
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-model.fit(train, epochs=50, validation_data=valid)
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[F1()])
+model.fit(train, epochs=40, validation_data=valid)
 
-test_loss, test_acc = model.evaluate(test)
-print(f'Test accuracy: {test_acc:.4f}, Test loss: {test_loss:.4f}')
+test_loss, test_f1 = model.evaluate(test)
+print(f'Test f1: {test_f1:.4f}, Test loss: {test_loss:.4f}')
 
 if 'jaffe' not in data:
     data['jaffe'] = {}
-data['jaffe']['CNN_accuracy'] = test_acc
+data['jaffe']['CNN_accuracy'] = test_f1
 data['jaffe']['CNN_params'] = model.count_params()
 
 with open('results.json', 'w') as f:

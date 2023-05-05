@@ -216,7 +216,7 @@ class GPTreeVisualizer:
                 self.tree_parse(child, child_node)
 
 
-tree_str = open("outputs/best_result_tree.txt", "r").readline()
+tree_str = open("outputs/tree_to_visualize.txt", "r").readline()
 drawer = GPTreeVisualizer(tree_str)
 
 parser = argparse.ArgumentParser(description="Visualize the tree on the example image")

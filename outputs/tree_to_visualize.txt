@@ -1,0 +1,1 @@
+sub(5, agg_max(conv(ARG0, GPFilter(np.array([[-3, -2, 1], [0, 0, -2], [-2, -2, -1]]))), GPPercentage(0.39623249258894866,0.731362500444547), GPPercentageSize(0.6947768691936269,0.5932590908938201), GPCutshape('elp')))
